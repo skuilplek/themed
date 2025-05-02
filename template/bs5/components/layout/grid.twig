@@ -1,0 +1,63 @@
+{# Grid Component
+   A flexible grid system for creating responsive layouts.
+   
+   Usage:
+   - Basic grid with equal-width columns
+   - Responsive grid with breakpoint-specific column sizes
+   - Auto-layout columns
+   - Variable width content
+   - Alignment and ordering
+   - Nesting
+   - Gutters
+   
+   Parameters:
+   - columns: array - List of columns with their properties (required)
+     - class: string - Custom column classes (optional)
+     - size: number|'auto'|null - Column size (1-12, auto, or null for equal width) (optional)
+     - breakpoint: string - Responsive breakpoint (sm|md|lg|xl|xxl) (optional)
+     - offset: number - Column offset (0-11) (optional)
+     - order: number|string - Column order (0-5, first, last) (optional)
+     - content: string - Column content (required)
+     - align: string - Vertical alignment (start|center|end) (optional)
+   - gutters: number - Gutter size (0-5) (optional)
+   - row_class: string - Additional row classes (optional)
+   - vertical_align: string - Vertical alignment (start|center|end) (optional)
+   - horizontal_align: string - Horizontal alignment (start|center|end|around|between|evenly) (optional)
+#}
+
+<div 
+    class="row
+        {% if content.gutters is defined %} g-{{ content.gutters }}{% endif %}
+        {% if content.vertical_align %} align-items-{{ content.vertical_align }}{% endif %}
+        {% if content.horizontal_align %} justify-content-{{ content.horizontal_align }}{% endif %}
+        {% if content.row_class %} {{ content.row_class }}{% endif %}
+    "
+>
+    {% for column in content.columns %}
+    <div class="
+        {% if column.class %}
+            {{ column.class }}
+        {% else %}
+            col{% if column.size %}-{{ column.size }}{% endif %}
+            {% if column.breakpoint %}-{{ column.breakpoint }}{% endif %}
+        {% endif %}
+        {% if column.offset %}
+            {% if column.breakpoint %}
+                offset-{{ column.breakpoint }}-{{ column.offset }}
+            {% else %}
+                offset-{{ column.offset }}
+            {% endif %}
+        {% endif %}
+        {% if column.order %}
+            {% if column.breakpoint %}
+                order-{{ column.breakpoint }}-{{ column.order }}
+            {% else %}
+                order-{{ column.order }}
+            {% endif %}
+        {% endif %}
+        {% if column.align %} align-self-{{ column.align }}{% endif %}
+    ">
+        {{ column.content|raw }}
+    </div>
+    {% endfor %}
+</div>

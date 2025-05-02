@@ -17,7 +17,7 @@
     - tag: string - HTML tag to use (button, a, input) (optional)
     - href: string - URL for anchor tag buttons (optional)
     - class: string - Additional CSS classes (optional)
-    - attributes: array - Additional HTML attributes (optional)
+    - attributes: string - Additional HTML attributes (optional)
 
 #}
 
@@ -57,11 +57,14 @@
 
 {# Build the button #}
 <{{ tag }}
+    {% if content.id %}
+        id="{{ content.id }}"
+    {% endif %}
     {% if tag == 'button' %}
         type="{{ content.type|default('button') }}"
     {% endif %}
     {% if tag == 'a' %}
-        href="{{ content.href|default('#') }}"
+        href="{{ content.href|default('#!') }}"
         role="button"
     {% endif %}
     class="{{ button_classes|join(' ') }}"
@@ -71,9 +74,7 @@
         data-loading="true"
     {% endif %}
     {% if content.attributes %}
-        {% for attr, value in content.attributes %}
-            {{ attr }}="{{ value }}"
-        {% endfor %}
+        {{ content.attributes }}
     {% endif %}
 >
     {% if content.loading %}

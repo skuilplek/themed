@@ -1,0 +1,133 @@
+{# Modal Component
+   A component for creating modals with Bootstrap 5.
+   
+   Parameters:
+   - id: string - Modal ID (required)
+   - header_icon: icon for header (optional)
+   - title: string - Modal title (optional)
+   - content: string/block - Modal body content (optional)
+   - footer: string/block - Modal footer content (optional)
+   - size: string - Modal size (sm, lg, xl) (optional)
+   - centered: boolean - Whether to vertically center the modal (optional)
+   - scrollable: boolean - Whether to make the modal body scrollable (optional)
+   - fullscreen: boolean/string - Make modal fullscreen (true, sm-down, md-down, etc.) (optional)
+   - static: boolean - Whether to disable closing when clicking outside (optional)
+   - trigger: object - Trigger button configuration (optional)
+     - text: string - Button text (optional)
+     - variant: string - Button variant (optional)
+     - size: string - Button size (optional)
+     - icon: string - Button icon (optional)
+   - header_class: string - Additional header classes (optional)
+   - body_class: string - Additional body classes (optional)
+   - footer_class: string - Additional footer classes (optional)
+   - class: string - Additional modal classes (optional)
+   - attributes: string - Additional modal attributes (optional)
+#}
+
+{# Set default values #}
+{% set size = content.size|default(null) %}
+{% set centered = content.centered ?? false %}
+{% set scrollable = content.scrollable ?? false %}
+{% set static = content.static ?? false %}
+
+{# Build modal classes #}
+{% set modal_classes = ['modal'] %}
+{% set dialog_classes = ['modal-dialog'] %}
+
+{% if size %}
+    {% set dialog_classes = dialog_classes|merge(['modal-' ~ size]) %}
+{% endif %}
+
+{% if centered %}
+    {% set dialog_classes = dialog_classes|merge(['modal-dialog-centered']) %}
+{% endif %}
+
+{% if scrollable %}
+    {% set dialog_classes = dialog_classes|merge(['modal-dialog-scrollable']) %}
+{% endif %}
+
+{% if content.fullscreen %}
+    {% if content.fullscreen == true %}
+        {% set dialog_classes = dialog_classes|merge(['modal-fullscreen']) %}
+    {% else %}
+        {% set dialog_classes = dialog_classes|merge(['modal-fullscreen-' ~ content.fullscreen]) %}
+    {% endif %}
+{% endif %}
+
+{% if content.class %}
+    {% set modal_classes = modal_classes|merge([content.class]) %}
+{% endif %}
+
+{# Render trigger button if configured #}
+{% if content.trigger %}
+    <button 
+        type="button" 
+        class="btn btn-{{ content.trigger.variant|default('primary') }}{% if content.trigger.size %} btn-{{ content.trigger.size }}{% endif %}{% if content.trigger.class %} {{ content.trigger.class }}{% endif %}" 
+        data-bs-toggle="modal" 
+        data-bs-target="#{{ content.id }}"
+    >
+        {% if content.trigger.icon %}
+            {{ content.trigger.icon|raw }}
+        {% endif %}
+        {{ content.trigger.text|raw }}
+    </button>
+{% endif %}
+
+{# Render modal #}
+<div 
+    class="{{ modal_classes|join(' ') }}"
+    id="{{ content.id }}"
+    tabindex="-1"
+    aria-labelledby="{{ content.id }}-label"
+    aria-hidden="true"
+    {% if static %}data-bs-backdrop="static" data-bs-keyboard="false"{% endif %}
+    {% if content.attributes %}
+        {{ content.attributes }}
+    {% endif %}
+>
+    <div class="{{ dialog_classes|join(' ') }}">
+        <div class="modal-content">
+            {% if content.title %}
+                <div class="modal-header{% if content.header_class %} {{ content.header_class }}{% endif %}">
+                    <h5 class="modal-title" id="{{ content.id }}-label">
+                        {% if content.header_icon %}
+                            {{ content.header_icon|raw }}   
+                        {% endif %}
+                        {{ content.title|raw }}
+                    </h5>
+                    <button 
+                        type="button" 
+                        class="btn-close" 
+                        data-bs-dismiss="modal" 
+                        aria-label="Close"
+                    ></button>
+                </div>
+            {% endif %}
+
+            <div class="modal-body{% if content.body_class %} {{ content.body_class }}{% endif %}">
+                {{ content.content|raw }}
+            </div>
+
+            {% if content.footer %}
+                <div class="modal-footer{% if content.footer_class %} {{ content.footer_class }}{% endif %}">
+                    {{ content.footer|raw }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{# Initialize modal if static #}
+{% if static %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var modal = document.getElementById('{{ content.id }}');
+    if (modal) {
+        var modalInstance = new bootstrap.Modal(modal, {
+            backdrop: 'static',
+            keyboard: false
+        });
+    }
+});
+</script>
+{% endif %}
