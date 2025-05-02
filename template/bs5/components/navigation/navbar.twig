@@ -1,49 +1,59 @@
-{# Navbar Component
-   A responsive navigation bar that can be customized with various styles and positions.
-   
-   Parameters:
-   - style: string - Navbar style theme ('light' or 'dark', default: 'light') (optional)
-   - bg: string - Background color variant (primary, secondary, light, dark, etc., default: 'light') (optional)
-   - expand: string - Breakpoint for navbar expansion (sm, md, lg, xl, xxl, default: 'md') (optional)
-   - position: string - Navbar position ('fixed-top', 'fixed-bottom', 'sticky-top') (optional)
-   - class: string - Additional CSS classes (optional)
-   - fluid: boolean - Whether to use fluid container width (optional)
-   - id: string - Custom ID for the navbar collapse element (default: 'navbarCollapse') (optional)
-   - items_class: string - Additional CSS classes for the navbar items container (optional)
-   
-   Brand Parameters:
-   - brand.text: string - Brand text to display (optional)
-   - brand.url: string - Brand link URL (default: '#') (optional)
-   - brand.image.src: string - Brand image source URL (optional)
-   - brand.image.alt: string - Brand image alt text (optional)
-   - brand.image.height: number - Brand image height in pixels (default: 24) (optional)
-   
-   Navigation Items Parameters:
-   - items: array - List of navigation items (optional)
-     - text: string - Item text
-     - url: string - Item URL (default: '#') (optional)
-     - active: boolean - Whether item is active (optional)
-     - disabled: boolean - Whether item is disabled (optional)
-     - icon: string - Optional icon class (optional)
-     - class: string - Additional CSS classes for the item (optional)
-     - dropdown: array - Optional dropdown menu items (optional)
-       - text: string - Dropdown item text
-       - url: string - Dropdown item URL (default: '#') (optional)
-       - active: boolean - Whether dropdown item is active (optional)
-       - disabled: boolean - Whether dropdown item is disabled (optional)
-       - divider: boolean - Add a divider instead of an item (optional)
-   
-   Search Form Parameters:
-   - search: boolean|object - Enable search form and its options (optional)
-     - placeholder: string - Search input placeholder (default: 'Search') (optional)
-     - label: string - Search input aria-label (default: 'Search') (optional)
-     - button_text: string - Search button text (default: 'Search') (optional)
-     - button_variant: string - Button style variant (default: 'outline-success') (optional)
+{#
+  Bootstrap 5 Navbar Component
+  
+  A responsive navigation bar that can be customized with various styles and positions.
+  
+  Parameters:
+  - style: string - Navbar style theme ('light' or 'dark', default: 'light') (optional)
+  - bg: string - Background color variant (primary, secondary, light, dark, etc., default: 'light') (optional)
+  - expand: string - Breakpoint for navbar expansion (sm, md, lg, xl, xxl, default: 'md') (optional)
+  - position: string - Navbar position ('fixed-top', 'fixed-bottom', 'sticky-top') (optional)
+  - class: string - Additional CSS classes (optional)
+  - fluid: boolean - Whether to use fluid container width (optional)
+  - id: string - Custom ID for the navbar collapse element (default: 'navbarCollapse') (optional)
+  - items_class: string - Additional CSS classes for the navbar items container (optional)
+  
+  Brand Parameters:
+  - brand.text: string - Brand text to display (optional)
+  - brand.url: string - Brand link URL (default: '#!') (optional)
+  - brand.image.src: string - Brand image source URL (optional)
+  - brand.image.alt: string - Brand image alt text (optional)
+  - brand.image.height: number - Brand image height in pixels (default: 24) (optional)
+  
+  Navigation Items Parameters:
+  - items: array - List of navigation items (optional)
+    - text: string - Item text
+    - url: string - Item URL (default: '#!') (optional)
+    - active: boolean - Whether item is active (optional)
+    - disabled: boolean - Whether item is disabled (optional)
+    - icon: string - Optional icon HTML or class (can be raw HTML from icon component, or a class like 'bi bi-house') (optional)
+    - class: string - Additional CSS classes for the item (optional)
+    - style: string - Inline CSS style for the item (optional)
+    - target: string - Link target attribute (e.g., '_blank', '_self', default: none) (optional)
+    - title: string - Link title attribute for tooltip or accessibility (optional)
+    - dropdown: array - Optional dropdown menu items (optional)
+      - text: string - Dropdown item text
+      - url: string - Dropdown item URL (default: '#!') (optional)
+      - active: boolean - Whether dropdown item is active (optional)
+      - disabled: boolean - Whether dropdown item is disabled (optional)
+      - target: string - Link target attribute for dropdown item (e.g., '_blank', '_self', default: none) (optional)
+      - title: string - Link title attribute for dropdown item (optional)
+      - icon: string - Optional icon HTML or class for dropdown item (can be raw HTML from icon component, or a class like 'bi bi-house') (optional)
+      - class: string - Additional CSS classes for the dropdown item (optional)
+      - style: string - Inline CSS style for the dropdown item (optional)
+      - divider: boolean - Add a divider instead of an item (optional)
+  
+  Search Form Parameters:
+  - search: boolean|object - Enable search form and its options (optional)
+    - placeholder: string - Search input placeholder (default: 'Search') (optional)
+    - label: string - Search input aria-label (default: 'Search') (optional)
+    - button_text: string - Search button text (default: 'Search') (optional)
+    - button_variant: string - Button style variant (default: 'outline-success') (optional)
 #}
 <nav class="navbar navbar-{{ content.style|default('light') }} bg-{{ content.bg|default('light') }} navbar-expand-{{ content.expand|default('md') }}{% if content.position %} {{ content.position }}{% endif %}{% if content.class %} {{ content.class }}{% endif %}">
     <div class="container{% if content.fluid %}-fluid{% endif %}">
         {% if content.brand %}
-        <a class="navbar-brand" href="{{ content.brand.url|default('#') }}">
+        <a class="navbar-brand" href="{{ content.brand.url|default('#!') }}">
             {% if content.brand.image %}
             <img src="{{ content.brand.image.src }}" 
                  alt="{{ content.brand.image.alt|default('') }}"
@@ -62,23 +72,40 @@
             {% if content.items %}
             <ul class="navbar-nav me-auto mb-2 mb-md-0{% if content.items_class %} {{ content.items_class }}{% endif %}">
                 {% for item in content.items %}
-                <li class="nav-item{% if item.dropdown %} dropdown{% endif %}{% if item.class %} {{ item.class }}{% endif %}">
+                {% if item.active|default(false) %} active {% endif %}
+                {% if item.disabled|default(false) %} disabled {% endif %}
+                {% if item.target %} target="{{ item.target }}" {% endif %}
+                {% if item.title %} title="{{ item.title }}" {% endif %}
+                {% if item.class %} class="{{ item.class }}" {% endif %}
+                {% if item.style %} style="{{ item.style }}" {% endif %}
+                <li class="nav-item{% if item.dropdown %} dropdown{% endif %}{% if item_class %} {{ item_class }}{% endif %}"{{ item_style }}>
                     {% if item.dropdown %}
-                    <a class="nav-link dropdown-toggle{% if item.active %} active{% endif %}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        {% if item.icon %}<i class="{{ item.icon }}"></i> {% endif %}{{ item.text }}
+                    <a class="nav-link dropdown-toggle{{ is_active }}{{ is_disabled }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"{{ item_title }}>
+                        {% if item.icon %} {{ item.icon|raw }} {% endif %}
+                        {% if item.text %} {{ item.text }} {% endif %}
                     </a>
                     <ul class="dropdown-menu">
-                        {% for subitem in item.dropdown %}
-                        {% if subitem.divider %}
+                        {% for dropdown_item in item.dropdown %}
+                        {% if dropdown_item.divider|default(false) %}
                         <li><hr class="dropdown-divider"></li>
                         {% else %}
-                        <li><a class="dropdown-item{% if subitem.active %} active{% endif %}{% if subitem.disabled %} disabled{% endif %}" href="{{ subitem.url|default('#') }}"{% if subitem.disabled %} aria-disabled="true"{% endif %}>{{ subitem.text }}</a></li>
+                        {% if dropdown_item.active|default(false) %} active {% endif %}
+                        {% if dropdown_item.disabled|default(false) %} disabled {% endif %}
+                        {% if dropdown_item.target %} target="{{ dropdown_item.target }}" {% endif %}
+                        {% if dropdown_item.title %} title="{{ dropdown_item.title }}" {% endif %}
+                        {% if dropdown_item.class %} class="{{ dropdown_item.class }}" {% endif %}
+                        {% if dropdown_item.style %} style="{{ dropdown_item.style }}" {% endif %}
+                        <li><a class="dropdown-item{{ dropdown_active }}{{ dropdown_disabled }}{% if dropdown_class %} {{ dropdown_class }}{% endif %}" href="{{ dropdown_item.url|default('#!') }}"{{ dropdown_target }}{{ dropdown_title }}{{ dropdown_style }}>
+                            {% if dropdown_item.icon %} {{ dropdown_item.icon|raw }} {% endif %}
+                            {% if dropdown_item.text %} {{ dropdown_item.text }} {% endif %}
+                        </a></li>
                         {% endif %}
                         {% endfor %}
                     </ul>
                     {% else %}
-                    <a class="nav-link{% if item.active %} active{% endif %}{% if item.disabled %} disabled{% endif %}" href="{{ item.url|default('#') }}"{% if item.active %} aria-current="page"{% endif %}{% if item.disabled %} aria-disabled="true"{% endif %}>
-                        {% if item.icon %}<i class="{{ item.icon }}"></i> {% endif %}{{ item.text }}
+                    <a class="nav-link{{ is_active }}{{ is_disabled }}" href="{{ item.url|default('#!') }}"{{ item_target }}{{ item_title }}>
+                        {% if item.icon %} {{ item.icon|raw }} {% endif %}
+                        {% if item.text %} {{ item.text }} {% endif %}
                     </a>
                     {% endif %}
                 </li>
