@@ -1,0 +1,42 @@
+{# Icon Component
+   A component for rendering SVG icons with customizable size and color.
+   
+   Required Parameters:
+   - name: string - Name of the SVG icon file without extension
+   - svg: string - Raw SVG content to be rendered
+   
+   Size Parameters (choose one):
+   - size: string - Custom size with unit (e.g., '12px', '1.5rem', '2em') (optional)
+   - preset_size: string - Predefined size (sm, md, lg, xl, 2xl, 3xl) (optional)
+   
+   Color Parameters (choose one):
+   - color: string - Custom color value (hex, rgb, or valid CSS color) (optional)
+   - preset_color: string - Bootstrap color (primary, secondary, success, danger, warning, info, light, dark) (optional)
+   
+   Optional Parameters:
+   - title: string - Title attribute for accessibility (recommended for a11y) (optional)
+   - id: string - Custom ID for the icon wrapper (optional)
+   - attributes: object - Additional HTML attributes for the wrapper (optional)
+   
+   Notes:
+   - SVG dimensions are automatically adjusted based on the size parameter
+   - All numeric width/height attributes are removed to allow dynamic sizing
+   - Bootstrap theme colors are applied using CSS variables
+   - Default size is inherited from font-size if no size is specified
+   - Icons scale proportionally based on the font-size
+   - For icon sizes outside the range (8px-64px), preprocess the SVG in your application to remove width/height attributes
+#}
+
+{% if content.name %}
+{% set size_value = content.size|replace({'px': '', 'rem': '', 'em': ''}) %}
+<span 
+    {% if id %}id="{{ id }}"{% endif %}
+    class="themed-icon{% if not content.size and content.preset_size %} themed-icon-{{ content.preset_size }}{% endif %}{% if not content.color and content.preset_color %} themed-icon-{{ content.preset_color }}{% endif %}{% if content.class %} {{ content.class }}{% endif %}"
+    {% if content.title %}title="{{ content.title }}"{% endif %}
+    {% if content.size or content.color %}style="{% if content.size %}font-size:{{ content.size }}; {% endif %} {% if content.color %}{% if content.color starts with 'primary' or content.color starts with 'secondary' or content.color starts with 'success' or content.color starts with 'danger' or content.color starts with 'warning' or content.color starts with 'info' or content.color starts with 'light' or content.color starts with 'dark' %}color: var(--bs-{{ content.color }});{% else %}color: {{ content.color }};{% endif %}{% endif %}"{% endif %}
+    {% if attributes %}{{ attributes|raw }}{% endif %}
+>
+    {% set svg = content.svg|regex_replace('/width\s*=\s*"[^"]*"/i', 'width=""')|regex_replace('/height\s*=\s*"[^"]*"/i', 'height=""') %}
+    {{ svg|raw }}
+</span>
+{% endif %}

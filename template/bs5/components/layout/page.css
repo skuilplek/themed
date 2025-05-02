@@ -1,0 +1,61 @@
+section {
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+}
+
+section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+}
+
+.accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+.text-success.accordion-button:not(.collapsed) {
+    color: var(--bs-success);
+    background-color: rgba(var(--bs-success-rgb), 0.05);
+}
+
+.text-warning.accordion-button:not(.collapsed) {
+    color: var(--bs-warning);
+    background-color: rgba(var(--bs-warning-rgb), 0.05);
+}
+
+.text-danger.accordion-button:not(.collapsed) {
+    color: var(--bs-danger);
+    background-color: rgba(var(--bs-danger-rgb), 0.05);
+}
+
+pre {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+}
+
+.accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+.text-success.accordion-button:not(.collapsed) {
+    color: var(--bs-success);
+    background-color: rgba(var(--bs-success-rgb), 0.05);
+}
+
+.text-warning.accordion-button:not(.collapsed) {
+    color: var(--bs-warning);
+    background-color: rgba(var(--bs-warning-rgb), 0.05);
+}
+
+.text-danger.accordion-button:not(.collapsed) {
+    color: var(--bs-danger);
+    background-color: rgba(var(--bs-danger-rgb), 0.05);
+}

@@ -1,0 +1,62 @@
+{# Page Layout Component
+   A complete HTML5 page layout with Bootstrap 5 integration.
+   
+   Parameters:
+   - title: string - Page title for the <title> tag and SEO
+   - description: string - Meta description for SEO
+   - content: string - Main content HTML to be rendered in the page container
+   - navbar: string - Optional navbar HTML to be placed at the top of the page (optional)
+   - container_class: string - Additional CSS classes for the main container (default: none) (optional)
+   
+   Script Parameters:
+   - header_scripts: string - Additional scripts/styles to be included in the <head> section (optional)
+   - footer_scripts: string - Additional scripts to be included before </body> (optional)
+   
+   Bootstrap Configuration:
+   - Bootstrap 5.3.5 is included by default
+   - CSS is loaded in the header
+   - JavaScript bundle is loaded in the footer
+   - Responsive viewport meta tag is included
+   - UTF-8 charset is set
+   
+   Default Features:
+   - HTML5 doctype
+   - 'en' language attribute
+   - Responsive container for main content
+   - Bootstrap CDN integration (CSS and JS)
+#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ content.title }}</title>
+<meta name="description" content="{{ content.description }}">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+
+
+{% if content.header_scripts %}
+	{{ content.header_scripts|raw }}
+{% endif %}
+
+</head>
+<body>
+{% if content.navbar %}
+	{{ content.navbar|raw }}
+{% endif %}
+
+
+    <div class="container{% if content.container_class %} {{ content.container_class }}{% endif %}">
+        {{ content.content|raw }}
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+
+
+{% if content.footer_scripts %}
+	{{ content.footer_scripts|raw }}
+{% endif %}
+
+</body>
+</html>

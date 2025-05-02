@@ -1,0 +1,49 @@
+.themed-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.125em;
+}
+
+.themed-icon svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+}
+
+/* Icon sizes */
+.themed-icon-xs {
+    font-size: 0.75rem;
+}
+
+.themed-icon-sm {
+    font-size: 0.875rem;
+}
+
+.themed-icon-lg {
+    font-size: 1.25rem;
+}
+
+.themed-icon-xl {
+    font-size: 1.5rem;
+}
+
+.themed-icon-2xl {
+    font-size: 2rem;
+}
+
+.themed-icon-3xl {
+    font-size: 3rem;
+}
+
+/* Icon colors - using Bootstrap's theme colors */
+.themed-icon-primary { color: var(--bs-primary); }
+.themed-icon-secondary { color: var(--bs-secondary); }
+.themed-icon-success { color: var(--bs-success); }
+.themed-icon-danger { color: var(--bs-danger); }
+.themed-icon-warning { color: var(--bs-warning); }
+.themed-icon-info { color: var(--bs-info); }
+.themed-icon-light { color: var(--bs-light); }
+.themed-icon-dark { color: var(--bs-dark); }

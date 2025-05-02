@@ -1,0 +1,97 @@
+{# Navbar Component
+   A responsive navigation bar that can be customized with various styles and positions.
+   
+   Parameters:
+   - style: string - Navbar style theme ('light' or 'dark', default: 'light') (optional)
+   - bg: string - Background color variant (primary, secondary, light, dark, etc., default: 'light') (optional)
+   - expand: string - Breakpoint for navbar expansion (sm, md, lg, xl, xxl, default: 'md') (optional)
+   - position: string - Navbar position ('fixed-top', 'fixed-bottom', 'sticky-top') (optional)
+   - class: string - Additional CSS classes (optional)
+   - fluid: boolean - Whether to use fluid container width (optional)
+   - id: string - Custom ID for the navbar collapse element (default: 'navbarCollapse') (optional)
+   - items_class: string - Additional CSS classes for the navbar items container (optional)
+   
+   Brand Parameters:
+   - brand.text: string - Brand text to display (optional)
+   - brand.url: string - Brand link URL (default: '#') (optional)
+   - brand.image.src: string - Brand image source URL (optional)
+   - brand.image.alt: string - Brand image alt text (optional)
+   - brand.image.height: number - Brand image height in pixels (default: 24) (optional)
+   
+   Navigation Items Parameters:
+   - items: array - List of navigation items (optional)
+     - text: string - Item text
+     - url: string - Item URL (default: '#') (optional)
+     - active: boolean - Whether item is active (optional)
+     - disabled: boolean - Whether item is disabled (optional)
+     - icon: string - Optional icon class (optional)
+     - class: string - Additional CSS classes for the item (optional)
+     - dropdown: array - Optional dropdown menu items (optional)
+       - text: string - Dropdown item text
+       - url: string - Dropdown item URL (default: '#') (optional)
+       - active: boolean - Whether dropdown item is active (optional)
+       - disabled: boolean - Whether dropdown item is disabled (optional)
+       - divider: boolean - Add a divider instead of an item (optional)
+   
+   Search Form Parameters:
+   - search: boolean|object - Enable search form and its options (optional)
+     - placeholder: string - Search input placeholder (default: 'Search') (optional)
+     - label: string - Search input aria-label (default: 'Search') (optional)
+     - button_text: string - Search button text (default: 'Search') (optional)
+     - button_variant: string - Button style variant (default: 'outline-success') (optional)
+#}
+<nav class="navbar navbar-{{ content.style|default('light') }} bg-{{ content.bg|default('light') }} navbar-expand-{{ content.expand|default('md') }}{% if content.position %} {{ content.position }}{% endif %}{% if content.class %} {{ content.class }}{% endif %}">
+    <div class="container{% if content.fluid %}-fluid{% endif %}">
+        {% if content.brand %}
+        <a class="navbar-brand" href="{{ content.brand.url|default('#') }}">
+            {% if content.brand.image %}
+            <img src="{{ content.brand.image.src }}" 
+                 alt="{{ content.brand.image.alt|default('') }}"
+                 height="{{ content.brand.image.height|default(24) }}"
+                 class="d-inline-block align-text-top">
+            {% endif %}
+            {{ content.brand.text }}
+        </a>
+        {% endif %}
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#{{ content.id|default('navbarCollapse') }}" aria-controls="{{ content.id|default('navbarCollapse') }}" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="{{ content.id|default('navbarCollapse') }}">
+            {% if content.items %}
+            <ul class="navbar-nav me-auto mb-2 mb-md-0{% if content.items_class %} {{ content.items_class }}{% endif %}">
+                {% for item in content.items %}
+                <li class="nav-item{% if item.dropdown %} dropdown{% endif %}{% if item.class %} {{ item.class }}{% endif %}">
+                    {% if item.dropdown %}
+                    <a class="nav-link dropdown-toggle{% if item.active %} active{% endif %}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if item.icon %}<i class="{{ item.icon }}"></i> {% endif %}{{ item.text }}
+                    </a>
+                    <ul class="dropdown-menu">
+                        {% for subitem in item.dropdown %}
+                        {% if subitem.divider %}
+                        <li><hr class="dropdown-divider"></li>
+                        {% else %}
+                        <li><a class="dropdown-item{% if subitem.active %} active{% endif %}{% if subitem.disabled %} disabled{% endif %}" href="{{ subitem.url|default('#') }}"{% if subitem.disabled %} aria-disabled="true"{% endif %}>{{ subitem.text }}</a></li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <a class="nav-link{% if item.active %} active{% endif %}{% if item.disabled %} disabled{% endif %}" href="{{ item.url|default('#') }}"{% if item.active %} aria-current="page"{% endif %}{% if item.disabled %} aria-disabled="true"{% endif %}>
+                        {% if item.icon %}<i class="{{ item.icon }}"></i> {% endif %}{{ item.text }}
+                    </a>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if content.search %}
+            <form class="d-flex" role="search">
+                <input class="form-control me-2" type="search" placeholder="{{ content.search.placeholder|default('Search') }}" aria-label="{{ content.search.label|default('Search') }}">
+                <button class="btn btn-{{ content.search.button_variant|default('outline-success') }}" type="submit">{{ content.search.button_text|default('Search') }}</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</nav>

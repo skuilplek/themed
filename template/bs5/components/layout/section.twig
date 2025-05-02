@@ -1,0 +1,33 @@
+{# Section Component
+   A structural component for organizing content into distinct sections with optional headers.
+   
+   Content Parameters:
+   - title: string - Section heading text (renders as h2 with h4 styling) (optional)
+   - subtitle: string - Optional descriptive text below the title (renders with muted style) (optional)
+   - content: string - Main content HTML to be rendered in the section
+   
+   Styling Parameters:
+   - class: string - Additional CSS classes for the section container (optional)
+   - title_class: string - Additional CSS classes for the title element (optional)
+   - subtitle_class: string - Additional CSS classes for the subtitle element (optional)
+   - content_class: string - Additional CSS classes for the content wrapper (optional)
+   
+   Default Features:
+   - Sections have bottom margin (mb-5)
+   - Title uses h4 styling but h2 semantic tag
+   - Title has bottom margin (mb-3)
+   - Subtitle uses muted text color
+   - Subtitle has bottom margin (mb-4)
+#}
+
+<section class="mb-5{% if content.class %} {{ content.class }}{% endif %}">
+    {% if content.title %}
+        <h2 class="h4 mb-3{% if content.title_class %} {{ content.title_class }}{% endif %}">{{ content.title }}</h2>
+    {% endif %}
+    {% if content.subtitle %}
+        <p class="text-muted mb-4{% if content.subtitle_class %} {{ content.subtitle_class }}{% endif %}">{{ content.subtitle }}</p>
+    {% endif %}
+    <div{% if content.content_class %} class="{{ content.content_class }}"{% endif %}>
+        {{ content.content|raw }}
+    </div>
+</section>

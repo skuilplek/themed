@@ -1,0 +1,101 @@
+{# Button Component
+   A component for creating buttons with Bootstrap 5 styles.
+   
+   Parameters:
+    - type: string - Button type (button, submit, reset) (optional)
+    - variant: string - Button variant (primary, secondary, success, danger, warning, info, light, dark, link) (optional)
+    - outline: boolean - Whether to use outline variant (optional)
+    - size: string - Button size (sm, lg) (optional)
+    - text: string - Button text (optional)
+    - icon: string - Icon name (e.g., 'arrow-right', 'check') (optional)
+    - icon_position: string - Icon position (start, end) (optional)
+    - block: boolean - Whether to make the button full width (optional)
+    - disabled: boolean - Disable the button (optional)
+    - active: boolean - Set active state (optional)
+    - loading: boolean - Show loading state (optional)
+    - loading_text: string - Text to show while loading (optional)
+    - tag: string - HTML tag to use (button, a, input) (optional)
+    - href: string - URL for anchor tag buttons (optional)
+    - class: string - Additional CSS classes (optional)
+    - attributes: array - Additional HTML attributes (optional)
+
+#}
+
+{% set button_classes = ['btn'] %}
+
+{# Add variant classes #}
+{% if content.variant %}
+    {% if content.outline %}
+        {% set button_classes = button_classes|merge(['btn-outline-' ~ content.variant]) %}
+    {% else %}
+        {% set button_classes = button_classes|merge(['btn-' ~ content.variant]) %}
+    {% endif %}
+{% endif %}
+
+{# Add size classes #}
+{% if content.size %}
+    {% set button_classes = button_classes|merge(['btn-' ~ content.size]) %}
+{% endif %}
+
+{# Add block class #}
+{% if content.block %}
+    {% set button_classes = button_classes|merge(['d-block', 'w-100']) %}
+{% endif %}
+
+{# Add active class #}
+{% if content.active %}
+    {% set button_classes = button_classes|merge(['active']) %}
+{% endif %}
+
+{# Add custom classes #}
+{% if content.class %}
+    {% set button_classes = button_classes|merge(content.class|split(' ')) %}
+{% endif %}
+
+{# Determine the HTML tag #}
+{% set tag = content.tag|default('button') %}
+
+{# Build the button #}
+<{{ tag }}
+    {% if tag == 'button' %}
+        type="{{ content.type|default('button') }}"
+    {% endif %}
+    {% if tag == 'a' %}
+        href="{{ content.href|default('#') }}"
+        role="button"
+    {% endif %}
+    class="{{ button_classes|join(' ') }}"
+    {% if content.disabled %}disabled{% endif %}
+    {% if content.loading %}
+        disabled
+        data-loading="true"
+    {% endif %}
+    {% if content.attributes %}
+        {% for attr, value in content.attributes %}
+            {{ attr }}="{{ value }}"
+        {% endfor %}
+    {% endif %}
+>
+    {% if content.loading %}
+        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        {% if content.loading_text %}
+            {{ content.loading_text }}
+        {% else %}
+            Loading...
+        {% endif %}
+    {% else %}
+        {% if content.icon and content.icon_position != 'end' %}
+{{ component('icons/icon', { name: content.icon, class: content.text ? 'me-2' : '' }) }}
+
+        {% endif %}
+        
+        {% if content.text %}
+            {{ content.text }}
+        {% endif %}
+        
+        {% if content.icon and content.icon_position == 'end' %}
+{{ component('icons/icon', { name: content.icon, class: content.text ? 'ms-2' : '' }) }}
+
+        {% endif %}
+    {% endif %}
+</{{ tag }}>

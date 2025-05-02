@@ -1,0 +1,13 @@
+.alert {
+    position: relative;
+}
+
+.alert .btn-close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+}
+.alert svg {
+    width: 24px;
+    height: 24px;
+}

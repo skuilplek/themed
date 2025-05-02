@@ -1,0 +1,102 @@
+{# Toast Component
+   A component for creating toast notifications with Bootstrap 5.
+   
+   Parameters:
+   - title: string - Toast title
+   - content: string - Toast content
+   - subtitle: string - Optional subtitle/time (optional)
+   - variant: string - Toast variant for background (primary, success, etc.) (optional)
+   - icon: string - Optional icon (optional)
+   - autohide: boolean - Whether to automatically hide the toast (optional)
+   - delay: int - Delay before autohiding (in milliseconds) (optional)
+   - position: string - Toast position (top-right, top-left, bottom-right, bottom-left) (optional)
+   - class: string - Additional CSS classes (optional)
+   - attributes: array - Additional HTML attributes (optional)
+   - show: boolean - Whether to show the toast immediately (optional)
+   
+#}
+
+{# Set default values #}
+{% set autohide = content.autohide ?? true %}
+{% set delay = content.delay|default(5000) %}
+{% set show = content.show ?? true %}
+
+{# Build toast classes #}
+{% set toast_classes = ['toast'] %}
+
+{% if content.variant %}
+    {% set toast_classes = toast_classes|merge(['text-bg-' ~ content.variant]) %}
+{% endif %}
+
+{% if content.class %}
+    {% set toast_classes = toast_classes|merge([content.class]) %}
+{% endif %}
+
+{# Generate unique ID #}
+{% set toast_id = content.id|default('toast-' ~ random(100000)) %}
+
+{# Build container classes for positioning #}
+{% set container_classes = ['toast-container', 'position-fixed', 'p-3'] %}
+
+{% if content.position == 'top-right' %}
+    {% set container_classes = container_classes|merge(['top-0', 'end-0']) %}
+{% elseif content.position == 'top-left' %}
+    {% set container_classes = container_classes|merge(['top-0', 'start-0']) %}
+{% elseif content.position == 'bottom-right' %}
+    {% set container_classes = container_classes|merge(['bottom-0', 'end-0']) %}
+{% elseif content.position == 'bottom-left' %}
+    {% set container_classes = container_classes|merge(['bottom-0', 'start-0']) %}
+{% else %}
+    {% set container_classes = container_classes|merge(['top-0', 'end-0']) %}
+{% endif %}
+
+{# Render toast #}
+{% if content.position %}
+<div class="{{ container_classes|join(' ') }}">
+{% endif %}
+
+<div 
+    id="{{ toast_id }}"
+    class="{{ toast_classes|join(' ') }}"
+    role="alert" 
+    aria-live="assertive" 
+    aria-atomic="true"
+    data-bs-autohide="{{ autohide ? 'true' : 'false' }}"
+    data-bs-delay="{{ delay }}"
+    {% if content.attributes %}
+        {% for attr, value in content.attributes %}
+            {{ attr }}="{{ value }}"
+        {% endfor %}
+    {% endif %}
+>
+    <div class="toast-header">
+        {% if content.icon %}
+            {{ content.icon|raw }}&nbsp;
+        {% endif %}
+        <strong class="me-auto">{{ content.title }}</strong>
+        {% if content.subtitle %}
+            <small>{{ content.subtitle }}</small>
+        {% endif %}
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body">
+        {{ content.content|raw }}
+    </div>
+</div>
+
+{% if content.position %}
+</div>
+{% endif %}
+
+{# Initialize toast #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var toastElement = document.getElementById('{{ toast_id }}');
+    if (toastElement) {
+        var toast = new bootstrap.Toast(toastElement);
+        {% if show %}
+            toast.show();
+        {% endif %}
+    }
+});
+</script>
