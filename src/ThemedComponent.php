@@ -9,19 +9,12 @@ use Twig\Loader\FilesystemLoader;
 /**
  * Class ThemedComponent
  *
- * Represents a themed component for integrating design components into the application.
- * This class handles HTML, CSS, and JS content for the component, manages parameters,
- * and supports dynamic method calls for extended functionality.
+ * A simple way to create and render HTML components using PHP.
  *
- * //TODO add a complete usage example here
- * make sure all id="" are unique
- * 
- * @package App\ThemedComponent
+ * @package Skuilplek\Themed\ThemedComponent
  */
 class ThemedComponent
 {
-    //TODO add methods for all the common things in a component that can be set. 
-    //Add custom javascript and css loading functionality
     protected string $id = '';
     protected array $attributes = [];
     protected array $classes = [];
@@ -52,6 +45,9 @@ class ThemedComponent
     protected function __construct(string $component, array $config = [])
     {
         $this->component = $component;
+
+        $this->id = uniqid();
+
         $themePath = Themed::getThemePath();
         if (self::$twig === null) {
             $loader = new FilesystemLoader([
@@ -198,7 +194,6 @@ class ThemedComponent
      */
     protected function id(string $id): self
     {
-        //TODO Make sure it is unique and log the id
         $this->id = $id;
         return $this;
     }
