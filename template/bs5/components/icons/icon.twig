@@ -36,7 +36,15 @@
     {% if content.size or content.color %}style="{% if content.size %}font-size:{{ content.size }}; {% endif %} {% if content.color %}{% if content.color starts with 'primary' or content.color starts with 'secondary' or content.color starts with 'success' or content.color starts with 'danger' or content.color starts with 'warning' or content.color starts with 'info' or content.color starts with 'light' or content.color starts with 'dark' %}color: var(--bs-{{ content.color }});{% else %}color: {{ content.color }};{% endif %}{% endif %}"{% endif %}
     {% if attributes %}{{ attributes|raw }}{% endif %}
 >
-    {% set svg = content.svg|regex_replace('/width\s*=\s*"[^"]*"/i', 'width=""')|regex_replace('/height\s*=\s*"[^"]*"/i', 'height=""') %}
-    {{ svg|raw }}
+    
+    {% set svg = content.svg ? content.svg|regex_replace('/width[ \t]*=[ \t]*"[^"]*"/i', 'width=""')|regex_replace('/height[ \t]*=[ \t]*"[^"]*"/i', 'height=""') : '' %}
+
+    {# Optional: Display an error or placeholder if svg is empty #}
+    {% if not svg %}
+        <span class="error" title="Icon not found for {{ content.name }}">[-]</span>
+    {% else %}
+        {{ svg|raw }}
+    {% endif %}
+
 </span>
 {% endif %}
