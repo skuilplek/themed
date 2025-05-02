@@ -45,7 +45,6 @@ class ThemedComponent
     protected function __construct(string $component, array $config = [])
     {
         $this->component = $component;
-
         $this->id = uniqid();
 
         $themePath = Themed::getThemePath();
@@ -76,7 +75,7 @@ class ThemedComponent
         }
         $this->templatePath = $themePath;
 
-        Themed::log("Loading scripts for component: {$component}");
+        Themed::log("Loading scripts for component: {$component}, id: {$this->id}");
         Themed::loadScripts($component);
 
         $this->extractParameters($themePath . 'components/' . $component . '.twig');
@@ -289,11 +288,16 @@ class ThemedComponent
         foreach ($this->javascript as $js) {
             Themed::footerScripts($js);
         }
-
+        if(empty($this->content['id'])) {
+            $this->content['id'] = $this->id;
+        }
+        if(empty($this->content['classes'])) {
+            $this->content['classes'] = implode(' ', $this->classes);
+        }
+        if(empty($this->content['attributes'])) {
+            $this->content['attributes'] = $this->attributes;
+        }
         $context = [
-            'id' => $this->id,
-            'classes' => implode(' ', $this->classes),
-            'attributes' => $this->attributes,
             'content' => $this->content,
         ];
 
