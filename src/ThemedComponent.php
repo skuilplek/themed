@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Skuilplek;
+namespace Skuilplek\Themed;
 
 use Exception;
 use Twig\Environment;
