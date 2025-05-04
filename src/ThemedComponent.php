@@ -7,11 +7,10 @@ use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
 /**
- * Class ThemedComponent
+ * ThemedComponent
  *
  * A simple way to create and render HTML components using PHP.
  *
- * @package Skuilplek\Themed\ThemedComponent
  */
 class ThemedComponent
 {
@@ -20,11 +19,28 @@ class ThemedComponent
     protected array $classes = [];
     protected array $css = [];
     protected array $javascript = [];
-    protected array $content = [];
+    protected array $componentData = [];
     protected string $component = '';
     protected string $templatePath; //The full path where the template folders are
-    protected static string $baseTemplatePath;
+    /**
+     * Optional override for the base template path.
+     * If set, this path is used instead of Themed::getThemePath().
+     * @var string|null
+     */
+    protected static ?string $baseTemplatePath = null;
     protected static ?Environment $twig = null;
+
+    /**
+     * Optional custom logger callback. Signature: function(string $message): void
+     * @var callable|null
+     */
+    protected static $loggerCallback = null;
+
+    /**
+     * Cache for parsed parameter definitions, keyed by template file path.
+     * @var array<string, array<string, string>>
+     */
+    protected static array $parameterCache = [];
 
     protected bool $debugging;
     /**
@@ -47,7 +63,8 @@ class ThemedComponent
         $this->component = $component;
         $this->id = uniqid();
 
-        $themePath = Themed::getThemePath();
+        // Determine base path: use override if provided
+        $themePath = self::$baseTemplatePath ?? Themed::getThemePath();
         if (self::$twig === null) {
             $loader = new FilesystemLoader([
                 $themePath,
@@ -57,9 +74,11 @@ class ThemedComponent
             //Check if we are in debug mode
             $this->debugging = (int) (getenv('THEMED_DEBUG') ?? 0) > 0;
             $this->debuggingLevel = (int) (getenv('THEMED_DEBUG_LEVEL') ?? 0);
+            // Initialize Twig with HTML autoescaping by default for security
             self::$twig = new Environment($loader, [
                 'cache' => $this->debugging ? false : '/tmp/twig_cache', // Use cache directory when debugging is disabled
                 'debug' => $this->debugging,
+                'autoescape' => 'html', // Escape all variables by default; use |raw for trusted HTML
             ]);
             
             self::$twig->addFilter(new \Twig\TwigFilter('regex_replace', function ($string, $pattern, $replacement) {
@@ -75,10 +94,58 @@ class ThemedComponent
         }
         $this->templatePath = $themePath;
 
-        Themed::log("Loading scripts for component: {$component}, id: {$this->id}");
+        self::log("Loading scripts for component: {$component}, id: {$this->id}");
         Themed::loadScripts($component);
 
-        $this->extractParameters($themePath . 'components/' . $component . '.twig');
+        // Parse parameter definitions from the Twig docblock
+        $this->parseParametersFromDocblock($themePath . 'components/' . $component . '.twig');
+    }
+
+    /**
+     * Set a custom logger callback for ThemedComponent.
+     * @param callable(string): void $callback
+     */
+    public static function setLoggerCallback(callable $callback): void
+    {
+        self::$loggerCallback = $callback;
+    }
+    /**
+     * Set a custom Twig Environment to use (skips default bootstrap).
+     */
+    public static function setTwigEnvironment(Environment $twig): void
+    {
+        self::$twig = $twig;
+    }
+
+    /**
+     * Get the current Twig Environment, or null if not initialized.
+     */
+    public static function getTwigEnvironment(): ?Environment
+    {
+        return self::$twig;
+    }
+
+    /**
+     * Override the base template path. Next instantiation will bootstrap Twig with this path.
+     * @param string $path Absolute path to template directory, trailing slash optional.
+     */
+    public static function setBasePath(string $path): void
+    {
+        self::$baseTemplatePath = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        // Reset Twig to force re-initialization with new loader
+        self::$twig = null;
+    }
+
+    /**
+     * Internal log method. Uses custom logger if set, otherwise falls back to Themed::log().
+     */
+    protected static function log(string $message): void
+    {
+        if (self::$loggerCallback !== null) {
+            call_user_func(self::$loggerCallback, $message);
+        } else {
+            Themed::log($message);
+        }
     }
 
     public function getParameters()
@@ -87,16 +154,25 @@ class ThemedComponent
     }
 
     /**
-     * Extract all parameters from the component html and store them in the parameters array
-     * @param string $component
+     * Parse all parameters from the first Twig docblock and store them in the parameters array.
+     * Only the first {# ... #} block at the top of the template is considered.
+     *
+     * @param string $componentFile Path to the .twig template file
+     * @return $this
      */
-    private function extractParameters(string $componentFile)
+    private function parseParametersFromDocblock(string $componentFile)
     {
+        // Parameter-block caching: reuse previously parsed definitions
+        if (isset(self::$parameterCache[$componentFile])) {
+            $this->parameters = self::$parameterCache[$componentFile];
+            return $this;
+        }
         $parameters = [];
         if (file_exists($componentFile)) {
             $componentHtml = file_get_contents($componentFile);
             // Step 1: Extract the comment block
-            if (preg_match('/{#([\s\S]*?)#}/', $componentHtml, $commentMatch)) {
+            // Match only the first Twig docblock at the top of the file
+            if (preg_match('/\A\s*\{#([\s\S]*?)#\}/', $componentHtml, $commentMatch)) {
                 $commentBlock = $commentMatch[1];
 
                 // Step 3: Match lines like "- param: type - description"
@@ -113,10 +189,10 @@ class ThemedComponent
             'id' => 'string - The id of the element. If no id is supplied, a random one will be generated (optional)',
             'canSee' => 'bool - Whether the component should be visible or not (optional)',
             'addAttribute' => 'Add an attribute to the element. This is a string like \'data-foo="bar"\' or multiple attributes in a single string like \'data-foo="bar" data-bar="baz"\' (optional)',
-            'addClass' => 'Add a single "classname" to the element or multiple classes as a string like "class1 class2 class3" (optional)',
             'addJavaScript' => htmlentities('string - Add a script to the element. This is a string like \'<script>console.log(\'Hello World!\')</script>\' (optional)'),
             'addCss' => htmlentities('string - Add css styles to the element. This should be \'<style> custom-class {...} </style>\' (optional)')
         ];
+
         $parameters = array_merge($parameters, $methods);
         ksort($parameters);
         $remove_parameters = ['attributes'];
@@ -130,8 +206,10 @@ class ThemedComponent
             $parameters = ['content' => $content] + $parameters;
         }
         $this->parameters = $parameters;
+        // Cache the parsed parameters for this template file
+        self::$parameterCache[$componentFile] = $parameters;
         if ($this->debuggingLevel > 1) {
-            Themed::log("parameters: {$this->component} : " . json_encode($parameters));
+            self::log("parameters: {$this->component} : " . json_encode($parameters));
         }
         return $this;
     }
@@ -160,30 +238,17 @@ class ThemedComponent
     {
         if (!method_exists($this, $method)) {
             if ($this->debuggingLevel > 2) {
-                Themed::log("Content: {$this->component} : " . json_encode($args));
+                self::log("Content: {$this->component} : " . json_encode($args));
             }
             if (is_array($args) && !empty($args[0])) {
                 $args = reset($args);
             } else {
                 $args = '';
             }
-            if (is_array($args)) {
-                foreach ($args as $property => $value) {
-                    $this->content[$property] = $value;
-                }
-            } else {
-                $this->content[$method] = $args;
-            }
+            $this->componentData[$method] = $args;
             return $this;
         } else {
             //We can pass all the data as an array to a component or we can pass just the component's content data. This handles that
-            if($method == 'content') {
-                if(count($args) == 1) {
-                    if(is_string($args[0])) {
-                        $args[0] = ['content' => $args[0]];
-                    }
-                }
-            }
             return $this->{$method}(...$args);
         }
     }
@@ -194,16 +259,6 @@ class ThemedComponent
     protected function id(string $id): self
     {
         $this->id = $id;
-        return $this;
-    }
-
-    /**
-     * Adds a CSS class to the component.
-     */
-    protected function addClass(string $class): self
-    {
-        $this->classes[] = $class;
-        $this->classes = array_unique($this->classes);
         return $this;
     }
 
@@ -234,18 +289,6 @@ class ThemedComponent
         return $this;
     }
 
-    /**
-     * Sets the component's content.
-     */
-    protected function content(null|bool|string|array $content): self
-    {
-        if(!is_array($content)) {
-            $content = ['content' => $content];
-        }
-        $this->content = $content;
-        return $this;
-    }
-
     protected function canSee(bool $canSee): self
     {
         $this->canSee = $canSee;
@@ -258,8 +301,8 @@ class ThemedComponent
     protected function preprocessContent(): void
     {
         // Special handling for icon components
-        if (strpos($this->component, 'icons/') === 0 && isset($this->content['name'])) {
-            $this->content['svg'] = Themed::getSvgContent($this->content['name']);
+        if (strpos($this->component, 'icons/') === 0 && isset($this->componentData['name'])) {
+            $this->componentData['svg'] = Themed::getSvgContent($this->componentData['name']);
         }
     }
 
@@ -270,13 +313,23 @@ class ThemedComponent
         }
 
         if (empty($this->component)) {
-            throw new Exception('Component group and name must be set before rendering');
+            if($this->debugging) {
+                throw new Exception('Component group and name must be set before rendering');
+            } else {
+                self::log('Component group and name must be set before rendering');
+                return "<!-- ERROR: Component group and name must be set before rendering -->";
+            }
         }
 
         $this->preprocessContent();
 
         if (self::$twig === null) {
-            throw new Exception('Twig environment not initialized. Call ThemedComponent::setBasePath() first.');
+            if($this->debugging) {
+                throw new Exception('Twig environment not initialized. Call ThemedComponent::setBasePath() first.');
+            } else {
+                self::log('Twig environment not initialized. Call ThemedComponent::setBasePath() first.');
+                return "<!-- ERROR: Twig environment not initialized. -->";
+            }
         }
         
         $templateFile = "{$this->component}.twig";
@@ -288,19 +341,42 @@ class ThemedComponent
         foreach ($this->javascript as $js) {
             Themed::footerScripts($js);
         }
-        if(empty($this->content['id'])) {
-            $this->content['id'] = $this->id;
+
+        if(empty($this->componentData['id'])) {
+            $this->componentData['id'] = $this->id;
         }
-        if(empty($this->content['classes'])) {
-            $this->content['classes'] = implode(' ', $this->classes);
+
+        if(empty($this->componentData['classes'])) {
+            $this->componentData['classes'] = implode(' ', $this->classes);
         }
-        if(empty($this->content['attributes'])) {
-            $this->content['attributes'] = $this->attributes;
+
+        if(empty($this->componentData['attributes'])) {
+            $this->componentData['attributes'] = $this->attributes;
         }
+
         $context = [
-            'content' => $this->content,
+            'content' => $this->componentData,
         ];
 
+        // Improvement: Template existence check before rendering
+        $loader = self::$twig->getLoader();
+        if (method_exists($loader, 'exists') && !$loader->exists($templateFile)) {
+            $paths = [];
+            if ($loader instanceof FilesystemLoader) {
+                $paths = $loader->getPaths();
+            }
+            if($this->debugging) {
+                throw new Exception(
+                    sprintf(
+                    'Template "%s" not found. Searched in: %s',
+                    $templateFile,
+                    implode(', ', $paths)
+                ));
+            } else {
+                self::log(sprintf('Template "%s" not found. Searched in: %s', $templateFile, implode(', ', $paths)));
+                return "<!-- ERROR: Template \"{$templateFile}\" not found. -->";
+            }
+        }
         return self::$twig->render($templateFile, $context);
     }
 }

@@ -1,131 +1,37 @@
-# Themed Component Library Overview
+# Themed - PHP Component Framework
 
-This project provides a modular, maintainable, and extensible set of HTML components, organized for easy usage in modern PHP/Twig projects. All components are structured for maximum reusability and consistency, leveraging layout and content primitives. The default theme is Bootstrap 5, but the project is designed to be easily extended to other popular front-end frameworks and use entire custom themes as well.
+**Themed** is a PHP-based component framework designed to streamline the development of themed web applications. It provides a structured approach to building reusable components with support for Bootstrap 5 and other styling frameworks.
 
-## Installation
+## Purpose
 
-You can install the Themed Component Library as a Composer package by running the following command in your project directory:
+Themed aims to simplify the creation of modular, reusable UI components for web applications. It offers a foundation for building responsive layouts and navigation elements, with support for templating using Twig and easy integration with popular CSS frameworks.
 
-```bash
-composer require skuilplek/themed
-```
+## Project Structure
 
-After installation, you can autoload the library in your PHP project by including the Composer autoloader:
+- **src/**: Core source code for the Themed framework, including the main `ThemedComponent` class.
+- **template/**: Twig templates for rendering components, organized by framework (e.g., Bootstrap 5 under `bs5/`).
+- **tests/**: Unit tests to ensure the reliability of the framework components.
 
-```php
-require 'vendor/autoload.php';
-```
+## Getting Started
 
-## Template Structure
+### Prerequisites
+- PHP and Composer for dependency management.
 
-You can create a custom theme by using this structure and setting the `THEMED_TEMPLATE_PATH` environment variable to point to your custom theme. The default included theme is in `template/bs5/`.
-
-```
-template/bs5/
-├── components/
-│   ├── buttons/      # Button components (basic, groups, toggles)
-│   ├── content/      # Content components (accordion, alerts, badges, cards, images, lists, tables)
-│   ├── extra/        # Extra utility components
-│   ├── feedback/     # Feedback components (alerts, badges, progress)
-│   ├── form/         # Form components (inputs, checkboxes, radios, selects)
-│   ├── grid/         # Grid system components
-│   ├── header/       # Header and title components
-│   ├── html/         # Basic HTML element components
-│   ├── icons/        # Icon components for SVG icons
-│   ├── layout/       # Layout components (containers, sections, pages)
-│   ├── media/        # Media components (carousel, figures)
-│   ├── navigation/   # Navigation components (navbar, breadcrumbs, pagination, tabs)
-│   └── overlays/     # Overlay components (modals, dropdowns, offcanvas, popovers, toasts)
-├── css/
-│   ├── theme.css     #Global theme styles
-├── js/
-│   ├── theme.js      #Global theme scripts
-├── js/footer/
-│   ├── theme.js      #Global theme scripts which will be added to the footer instead of the header
-```
-
-## CSS and Javascript
-
-The CSS and Javascript files are loaded automatically when the Themed::loadScripts() method is called. You can also load specific scripts using the `Themed::headerScripts('script')` and `Themed::footerScripts('script')` methods. All loaded scripts can be accessed using the `Themed::headerScripts()` and `Themed::footerScripts() ` methods without passing any options. 
-
-## Available Components
-
-More components will be added later.
-
-### Buttons
-- Button
-
-### Feedback
-- Alert
-- Toast
-
-### Icons
-- Icon
-
-### Layout
-- Page
-- Section
-
-### Navigation
-- Navbar
-
-## Configuration
-
-The Themed Component Library can be configured using the following environment variables:
-
-- **THEMED_TEMPLATE_PATH**: Specifies the path to the template directory. Default is `/var/www/html/template/bs5/`.
-  ```bash
-  export THEMED_TEMPLATE_PATH=/var/www/html/template/bs5/
-  ```
-- **THEMED_DEBUG**: Enables or disables debug mode. Set to `1` to enable debugging. Default is `0`.
-  ```bash
-  export THEMED_DEBUG=1
-  ```
-- **THEMED_DEBUG_LEVEL**: Sets the debug level for logging. Levels range from `0` (minimal logging) to `3` (detailed logging). Default is `0`.
-  ```bash
-  export THEMED_DEBUG_LEVEL=0
-  ```
-- **THEMED_DEBUG_LOG**: Specifies the file path for debug logs. Default is `/var/www/html/themed.log`.
-  ```bash
-  export THEMED_DEBUG_LOG=/var/www/html/themed.log
-  ```
-
-These environment variables can be set in your shell configuration file or directly in your deployment scripts to customize the behavior of the library.
-
-## Guidelines
-
-- **Modularity:** All components are structured to be reusable and composable. Use `layout/section` and `layout/page` to wrap content for consistent structure.
-- **Maintainability:** Components follow a clear directory and naming convention. Avoid hardcoded HTML in templates; always use the provided components.
-- **Extensibility:** Add new components by following the existing structure. Group related components in their respective category folders.
-- **Styling:** Bootstrap 5 is the default style framework. Custom styles should be minimal and added only when necessary.
-- **Templating:** Twig is the recommended templating engine. All components are available as Twig partials.
+### Installation
+1. **Install as a Composer Package**: Themed is available as a Composer package. Add it to your project by running:
+   ```bash
+   composer require skuilplek/themed
+   ```
+2. **View Examples Online**: You can explore component usage examples and documentation online at [http://skuilplek.org/themed/](http://skuilplek.org/themed/).
 
 ## Usage
 
-To use the Themed Component Library in your PHP project, you can initialize and render components as shown below:
+Create your own components by extending `ThemedComponent` found in `src/`. Use the provided Twig templates in `template/` as a base for rendering your components with consistent styling.
 
-```php
-use Themed\ThemedComponent;
+## Guidelines
 
-// Example of creating and rendering an icon component
-ThemedComponent::make("icons/icon")
-	->addAttribute('data-foo="bar" data-bar="baz"') //Add an attribute to the element. This is a string like 'data-foo="bar"' or multiple attributes in a single string like 'data-foo="bar" data-bar="baz"' (optional)
-	->addClass('custom-class1 custom-class2 custom-class3') //Add a single "classname" to the element or multiple classes as a string like "class1 class2 class3" (optional)
-	->addCss('<style> .custom-class {...} </style>') //string - Add css styles to the element. This should be '<style> custom-class {...} </style>' (optional)
-	->addJavaScript('<script>console.log("Hello World!")</script>') //string - Add a script to the element. This is a string like '<script>console.log("Hello World!")</script>' (optional)
-	->canSee($usergroup == 'admin') //bool - Whether the component should be visible or not (optional)
-	->color('#ededed') //string - Custom color value (hex, rgb, or valid CSS color) (optional)
-	->id('my-icon-id') //string - The id of the element. If no id is supplied, a random one will be generated (optional)
-	->name('star') //string - Name of the SVG icon file without extension
-	->preset_color('primary') //string - Bootstrap color (primary, secondary, success, danger, warning, info, light, dark) (optional)
-	->preset_size('lg') //string - Predefined size (sm, md, lg, xl, 2xl, 3xl) (optional)
-	->size('26px') //string - Custom size with unit (e.g., '12px', '1.5rem', '2em') (optional)
-	->title('a custom button hover title') //string - Title attribute for accessibility (recommended for a11y) (optional)
-	->render();
-```
-
-For more details, see the individual component files in `template/bs5/components/`.
+Refer to `guidelines.md` for coding standards and best practices when contributing to or extending the framework.
 
 ## License
 
-This project is licensed under the LGPL v3.+ License.
+This project is licensed under the terms detailed in `LICENSE.md`.

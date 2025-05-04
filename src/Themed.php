@@ -9,6 +9,11 @@ class Themed
     public const SESSION_KEY = "sk_themed";
 
     private static array $svgCache = [];
+    /**
+     * Optional custom script callback. Signature: function(string $script, string $type, string $location): void
+     * @var callable|null
+     */
+    protected static $scriptCallback = null;
     public static function loadScripts($component = ""): void
     {
         $themePath = self::getThemePath();
@@ -70,6 +75,15 @@ class Themed
             }
         }
     }
+    /**
+     * Set a custom script callback. Next calls to headerScripts/footerScripts with non-empty scripts
+     * will invoke this callback instead of the default session-based storage.
+     * @param callable(string, string, string): void $callback
+     */
+    public static function setScriptCallback(callable $callback): void
+    {
+        self::$scriptCallback = $callback;
+    }
 
     private static function processStylesWithFonts(string $css, string $basePath): string
     {
@@ -130,6 +144,12 @@ class Themed
 
     public static function headerScripts($script = "", $type = "auto", $attributes = []): ?string
     {
+        // If a custom script callback is set, delegate all non-empty scripts to it
+        if ($script !== '' && is_callable(self::$scriptCallback)) {
+            $ext = $type === 'auto' ? pathinfo($script, PATHINFO_EXTENSION) : $type;
+            call_user_func(self::$scriptCallback, $script, $ext, 'header');
+            return null;
+        }
         if (!isset($_SESSION[self::SESSION_KEY]['header_scripts'])) {
             $_SESSION[self::SESSION_KEY]['header_scripts'] = [];
         }
@@ -174,6 +194,12 @@ class Themed
 
     public static function footerScripts($script = "", $type = "auto", $attributes = []): ?string
     {
+        // If a custom script callback is set, delegate all non-empty scripts to it
+        if ($script !== '' && is_callable(self::$scriptCallback)) {
+            $ext = $type === 'auto' ? pathinfo($script, PATHINFO_EXTENSION) : $type;
+            call_user_func(self::$scriptCallback, $script, $ext, 'footer');
+            return null;
+        }
         if (!isset($_SESSION[self::SESSION_KEY]['footer_scripts'])) {
             $_SESSION[self::SESSION_KEY]['footer_scripts'] = [];
         }
