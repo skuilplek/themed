@@ -22,7 +22,7 @@ Themed aims to simplify the creation of modular, reusable UI components for web 
    ```bash
    composer require skuilplek/themed
    ```
-2. **View Examples Online**: You can explore component usage examples and documentation online at [http://skuilplek.org/themed/](http://skuilplek.org/themed/).
+2. **View Examples Online**: You can explore component usage examples and documentation online at [https://skuilplek.org/themed/](https://skuilplek.org/themed/).
 
 ## Usage
 
