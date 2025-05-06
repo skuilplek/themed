@@ -24,19 +24,23 @@ Themed aims to simplify the creation of modular, reusable UI components for web 
    ```
 2. **View Examples Online**: You can explore component usage examples and documentation online at [https://skuilplek.org/themed/](https://skuilplek.org/themed/).
 
+3. **Example project**: Clone the example project to see how to use Themed in a real-world application.
+
+[https://github.com/skuilplek/themed-examples](https://github.com/skuilplek/themed-examples)
+
 ## Usage
 
 Create your own components by extending `ThemedComponent` found in `src/`. Use the provided Twig templates in `template/` as a base for rendering your components with consistent styling.
 
 ## Guidelines
 
-Refer to `GUIDELINES.md` for coding standards and best practices when contributing to or extending the framework. Detailed instructions are provided for creating new components and custom themes.
+Refer to [GUIDELINES.md](GUIDELINES.md) for coding standards and best practices when contributing to or extending the framework. Detailed instructions are provided for creating new components and custom themes.
 
 ## Additional Documentation
 
-- `GUIDELINES.md`: Provides a technical overview of the Themed framework, including core functionality, directory structure, and environment variables.
-- `OVERVIEW.md`: Offers additional details about the project's purpose and structure, complementing the information in this README.
+- [GUIDELINES.md](GUIDELINES.md): Provides a technical overview of the Themed framework, including core functionality, directory structure, and environment variables.
+- [OVERVIEW.md](OVERVIEW.md): Offers additional details about the project's purpose and structure, complementing the information in this README.
 
 ## License
 
-This project is licensed under the terms detailed in `LICENSE.md`.
+This project is licensed under the terms detailed in [LGPL-3.0-or-later](LICENSE.md).
