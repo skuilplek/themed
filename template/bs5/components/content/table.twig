@@ -1,0 +1,99 @@
+{# Table Component
+    A Bootstrap 5 component for creating responsive, styled tables with various features.
+
+    Parameters:
+    Core Options:
+        - headers: array - Table header cells (required)
+        - rows: array - Table rows, each containing an array of cells (required)
+        - class: string - Additional CSS classes for the table
+        - attributes: array - Additional HTML attributes for the table
+
+    Style Options:
+        - variant: string - Table style variant
+            Values: 'dark', 'striped', 'hover', 'bordered', 'borderless', 'small'
+        - responsive: boolean/string - Make table responsive
+            Values: true, 'sm', 'md', 'lg', 'xl'
+
+    Caption Options:
+        - caption: string - Table caption text
+        - caption_top: boolean - Place caption at the top of the table (default: false)
+
+    Custom Classes:
+        - header_class: string - Class for the header row
+        - header_cell_class: string - Class for header cells
+        - body_class: string - Class for the table body
+        - row_class: string - Class for table rows
+        - cell_class: string - Class for table cells
+#}
+
+{% set table_classes = ['table'] %}
+
+{# Add variant classes #}
+{% if content.variant %}
+    {% if content.variant == 'dark' %}
+        {% set table_classes = table_classes|merge(['table-dark']) %}
+    {% elseif content.variant == 'striped' %}
+        {% set table_classes = table_classes|merge(['table-striped']) %}
+    {% elseif content.variant == 'hover' %}
+        {% set table_classes = table_classes|merge(['table-hover']) %}
+    {% elseif content.variant == 'bordered' %}
+        {% set table_classes = table_classes|merge(['table-bordered']) %}
+    {% elseif content.variant == 'borderless' %}
+        {% set table_classes = table_classes|merge(['table-borderless']) %}
+    {% elseif content.variant == 'small' %}
+        {% set table_classes = table_classes|merge(['table-sm']) %}
+    {% endif %}
+{% endif %}
+
+{# Add custom classes #}
+{% if content.class %}
+    {% set table_classes = table_classes|merge([content.class]) %}
+{% endif %}
+
+{% if content.responsive %}
+    <div class="table-responsive{% if content.responsive != true %}-{{ content.responsive }}{% endif %}">
+{% endif %}
+
+<table class="{{ table_classes|join(' ') }}"
+    {% if content.attributes %}
+        {% for attr, value in content.attributes %}
+            {{ attr }}="{{ value }}"
+        {% endfor %}
+    {% endif %}
+>
+    {% if content.caption %}
+        <caption {% if content.caption_top %}class="caption-top"{% endif %}>
+            {{ content.caption }}
+        </caption>
+    {% endif %}
+
+    {% if content.headers %}
+        <thead {% if content.header_class %}class="{{ content.header_class }}"{% endif %}>
+            <tr>
+                {% for header in content.headers %}
+                    <th {% if content.header_cell_class %}class="{{ content.header_cell_class }}"{% endif %} scope="col">
+                        {{ header|raw }}
+                    </th>
+                {% endfor %}
+            </tr>
+        </thead>
+    {% endif %}
+
+    {% if content.rows %}
+        <tbody {% if content.body_class %}class="{{ content.body_class }}"{% endif %}>
+            {% for row in content.rows %}
+                <tr {% if content.row_class %}class="{{ content.row_class }}"{% endif %}>
+                    {% for cell in row %}
+                        <td {% if content.cell_class %}class="{{ content.cell_class }}"{% endif %}>
+                            {{ cell|raw }}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    {% endif %}
+</table>
+
+{% if content.responsive %}
+    </div>
+{% endif %}

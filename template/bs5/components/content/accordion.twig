@@ -1,0 +1,46 @@
+{# Accordion Component
+    A Bootstrap 5 accordion component for collapsible content sections.
+
+    Parameters:
+    - id: string - Unique identifier for the accordion
+    - items: array - Array of accordion items
+        - title: string - Title of the accordion item
+        - content: string - Content of the accordion item
+        - show: boolean - Whether the item is expanded by default
+        - header_variant: string - Color variant for the header (primary, secondary, etc.)
+        - header_icon: string - Icon class for the header (e.g., bi bi-star)
+    - flush: boolean - Whether to remove borders and background
+    - always_open: boolean - Whether multiple items can be open at once
+    - class: string - Additional CSS classes
+
+#}
+
+<div class="accordion{% if content.flush %} accordion-flush{% endif %}{% if content.class %} {{ content.class }}{% endif %}" id="{{ content.id }}">
+    {% for item in content.items %}
+        {% set item_id = content.id ~ '-' ~ loop.index %}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="{{ item_id }}-header">
+                <button class="accordion-button{% if not item.show %} collapsed{% endif %}{% if item.header_variant %} text-{{ item.header_variant }}{% endif %}" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#{{ item_id }}"
+                        aria-expanded="{% if item.show %}true{% else %}false{% endif %}"
+                        aria-controls="{{ item_id }}"
+                        aria-label="{{ item.title|default('Accordion Item') }}">
+                    {% if item.header_icon %}
+                        <i class="{{ item.header_icon }} me-2" aria-hidden="true"></i>
+                    {% endif %}
+                    {{ item.title|default('Accordion Item') }}
+                </button>
+            </h2>
+            <div id="{{ item_id }}" 
+                 class="accordion-collapse collapse{% if item.show %} show{% endif %}"
+                 aria-labelledby="{{ item_id }}-header"
+                 {% if not content.always_open %}data-bs-parent="#{{ content.id }}"{% endif %}>
+                <div class="accordion-body">
+                    {{ item.content|raw }}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>

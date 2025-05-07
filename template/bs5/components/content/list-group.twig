@@ -1,0 +1,80 @@
+{# List Group Component
+    A Bootstrap 5 component for creating flexible and interactive lists with various styling options.
+
+    Parameters:
+    Core Options:
+        - items: array - Array of list items (required)
+            - text: string - Text content of the item (required)
+            - active: boolean - Whether the item is active (default: false)
+            - disabled: boolean - Whether the item is disabled (default: false)
+            - variant: string - Color variant (primary, secondary, success, danger, warning, info, light, dark)
+            - href: string - URL for link items (transforms item into anchor)
+            - icon: string - Icon class to display before text (e.g., 'bi bi-star')
+
+    Badge Options:
+        - badge: array - Badge configuration for list items
+            - text: string - Badge text (required if badge is used)
+            - variant: string - Badge variant (same values as item variant, default: primary)
+
+    Layout Options:
+        - flush: boolean - Remove outer borders and rounded corners (default: false)
+        - numbered: boolean - Show numbers before items (default: false)
+        - horizontal: boolean|string - Display horizontally
+            Values: true, 'sm', 'md', 'lg', 'xl', 'xxl'
+        - class: string - Additional CSS classes
+
+    Example Usage:
+    {{ component('content/list-group', {
+        items: [
+            {
+                text: 'Active item',
+                active: true,
+                variant: 'primary'
+            },
+            {
+                text: 'Item with badge',
+                badge: {
+                    text: 'New',
+                    variant: 'danger'
+                }
+            },
+            {
+                text: 'Linked item',
+                href: '#',
+                icon: 'bi bi-link'
+            }
+        ],
+        numbered: true,
+        horizontal: 'md'
+    }) }}
+#}
+
+<ul class="list-group{% if content.flush %} list-group-flush{% endif %}{% if content.numbered %} list-group-numbered{% endif %}{% if content.horizontal %}{% if content.horizontal == true %} list-group-horizontal{% else %} list-group-horizontal-{{ content.horizontal }}{% endif %}{% endif %}{% if content.class %} {{ content.class }}{% endif %}">
+    {%- for item in content.items -%}
+        {%- set tag = item.href ? 'a' : 'li' -%}
+        {%- set base_class = 'list-group-item' -%}
+        {%- set item_class = [
+            base_class,
+            item.active ? 'active' : '',
+            item.disabled ? 'disabled' : '',
+            item.variant ? 'list-group-item-' ~ item.variant : '',
+            item.href ? 'list-group-item-action' : ''
+        ]|filter(v => v != '')|join(' ') -%}
+
+        <{{ tag }}
+            {%- if item.href %} href="{{ item.href }}"{% endif %}
+            class="{{ item_class }}"
+            {%- if item.disabled %} aria-disabled="true"{% endif %}
+            {%- if item.active %} aria-current="true"{% endif %}>
+            {%- if item.icon -%}
+                <i class="{{ item.icon }} me-2" aria-hidden="true"></i>
+            {%- endif -%}
+            {{ item.text|raw }}
+            {%- if item.badge -%}
+                <span class="badge {% if item.badge.variant %}bg-{{ item.badge.variant }}{% else %}bg-primary{% endif %} float-end">
+                    {{ item.badge.text }}
+                </span>
+            {%- endif -%}
+        </{{ tag }}>
+    {%- endfor -%}
+</ul>

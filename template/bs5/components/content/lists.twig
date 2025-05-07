@@ -1,0 +1,106 @@
+{# Lists Component
+    A Bootstrap 5 component for creating various types of lists with flexible styling options.
+
+    Parameters:
+    Core Options:
+        - type: string - Type of list (required)
+            Values: 'unordered', 'ordered', 'unstyled', 'inline', 'description'
+        - items: array - List items (required for non-description lists)
+        - class: string - Additional CSS classes
+        - attributes: array - Additional HTML attributes
+
+    Description List Options:
+        - terms: array - List of terms (required for description lists)
+        - descriptions: array - List of descriptions (required for description lists)
+        - horizontal: boolean - Display list horizontally (default: false)
+        - breakpoint: string - Breakpoint for horizontal layout
+            Values: 'sm', 'md', 'lg', 'xl', 'xxl'
+
+    Inline List Options:
+        - separator: string - Custom separator between inline items
+
+    Example Usage:
+    Basic List:
+    {{ component('content/lists', {
+        type: 'unordered',
+        items: [
+            'First item',
+            'Second item with <strong>bold</strong> text',
+            'Third item'
+        ]
+    }) }}
+
+    Description List:
+    {{ component('content/lists', {
+        type: 'description',
+        terms: ['Term 1', 'Term 2'],
+        descriptions: ['Description 1', 'Description 2'],
+        horizontal: true,
+        breakpoint: 'md'
+    }) }}
+
+    Inline List with Separator:
+    {{ component('content/lists', {
+        type: 'inline',
+        items: ['Home', 'Products', 'About'],
+        separator: ' | '
+    }) }}
+#}
+
+{% set tag = 'ul' %}
+{% set classes = [] %}
+
+{# Determine list type and classes #}
+{% if content.type == 'ordered' %}
+    {% set tag = 'ol' %}
+{% elseif content.type == 'unstyled' %}
+    {% set classes = classes|merge(['list-unstyled']) %}
+{% elseif content.type == 'inline' %}
+    {% set classes = classes|merge(['list-inline']) %}
+{% elseif content.type == 'description' %}
+    {% set tag = 'dl' %}
+    {% if content.horizontal %}
+        {% set classes = classes|merge(['row']) %}
+        {% if content.breakpoint %}
+            {% set classes = classes|merge(['row-cols-' ~ content.breakpoint]) %}
+        {% endif %}
+    {% endif %}
+{% endif %}
+
+{# Add custom classes #}
+{% if content.class %}
+    {% set classes = classes|merge([content.class]) %}
+{% endif %}
+
+<{{ tag }}
+    {% if classes|length > 0 %}class="{{ classes|join(' ')|trim }}"{% endif %}
+    {% if content.attributes %}
+        {% for attr, value in content.attributes %}
+            {{ attr }}="{{ value }}"
+        {% endfor %}
+    {% endif %}
+>
+    {% if content.type == 'description' %}
+        {% for i in 0..((content.terms|length) - 1) %}
+            {% if content.horizontal %}
+                <div class="row mb-3">
+                    <dt class="col-sm-3">{{ content.terms[i]|raw }}</dt>
+                    <dd class="col-sm-9">{{ content.descriptions[i]|raw }}</dd>
+                </div>
+            {% else %}
+                <dt>{{ content.terms[i]|raw }}</dt>
+                <dd>{{ content.descriptions[i]|raw }}</dd>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        {% for item in content.items %}
+            <li{% if content.type == 'inline' %} class="list-inline-item"{% endif %}>
+                {% if content.type == 'inline' and content.separator and not loop.last %}
+                    {{ item|raw }}<span class="list-inline-separator">{{ content.separator|raw }}</span>
+                {% else %}
+                    {{ item|raw }}
+                {% endif %}
+            </li>
+        {% endfor %}
+    {% endif %}
+</{{ tag }}>

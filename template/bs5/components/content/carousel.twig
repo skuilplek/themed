@@ -1,0 +1,108 @@
+{# Carousel Component
+    A Bootstrap 5 carousel component for displaying a slideshow of content.
+
+    Parameters:
+    - id: string - Unique identifier for the carousel (default: random generated)
+    - class: string - Additional CSS classes for the carousel
+    - fade: boolean - Enable fade transition between slides
+    - indicators: boolean - Show slide indicators
+    - controls: boolean - Show previous/next controls
+    - aspect_ratio: number - Set a fixed aspect ratio for slides (e.g., 56.25 for 16:9)
+    - dark_controls: boolean - Use dark-colored controls
+    - dark_indicators: boolean - Use dark-colored indicators
+    - styles: boolean - Include custom styles
+    - items: array - Array of carousel items
+        - image: object - Image configuration
+            - src: string - Image source URL
+            - alt: string - Alt text for the image
+        - title: string - Slide title
+        - caption: string - Slide caption text
+        - caption_class: string - Additional classes for caption
+        - buttons: array - Array of buttons
+            - text: string - Button text
+            - url: string - Button URL
+            - style: string - Button style (default: 'light')
+#}
+
+<div id="{{ content.id|default('carousel-' ~ random()) }}" class="carousel slide{% if content.fade %} carousel-fade{% endif %}{% if content.class %} {{ content.class }}{% endif %}" data-bs-ride="carousel">
+    {% if content.indicators %}
+    <div class="carousel-indicators">
+        {% for item in content.items %}
+        <button type="button" 
+                data-bs-target="#{{ content.id|default('carousel-' ~ random()) }}" 
+                data-bs-slide-to="{{ loop.index0 }}"
+                {% if loop.first %}class="active" aria-current="true"{% endif %}
+                aria-label="Slide {{ loop.index }}">
+        </button>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="carousel-inner">
+        {% for item in content.items %}
+        <div class="carousel-item{% if loop.first %} active{% endif %}">
+            {% if item.image %}
+            {% if content.aspect_ratio %}
+            <div style="position: relative; padding-bottom: {{ content.aspect_ratio }}%;">
+                <img src="{{ item.image.src }}" 
+                     class="d-block w-100 position-absolute top-0 start-0 w-100 h-100 object-fit-cover" 
+                     alt="{{ item.image.alt|default('') }}">
+            </div>
+            {% else %}
+            <img src="{{ item.image.src }}" 
+                 class="d-block w-100" 
+                 alt="{{ item.image.alt|default('') }}">
+            {% endif %}
+            {% endif %}
+
+            {% if item.caption or item.title %}
+            <div class="carousel-caption d-none d-md-block{% if item.caption_class %} {{ item.caption_class }}{% endif %}">
+                {% if item.title %}
+                <h5>{{ item.title }}</h5>
+                {% endif %}
+                {% if item.caption %}
+                <p>{{ item.caption }}</p>
+                {% endif %}
+                {% if item.buttons %}
+                <div class="carousel-buttons">
+                    {% for button in item.buttons %}
+                    <a href="{{ button.url }}" class="btn btn-{{ button.style|default('light') }}">{{ button.text }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if content.controls %}
+    <button class="carousel-control-prev" type="button" data-bs-target="#{{ content.id|default('carousel-' ~ random()) }}" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#{{ content.id|default('carousel-' ~ random()) }}" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+    {% endif %}
+</div>
+
+{% if content.styles %}
+<style>
+.carousel-item {
+    transition: transform .6s ease-in-out;
+}
+{% if content.dark_controls %}
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    filter: invert(1) grayscale(100);
+}
+{% endif %}
+{% if content.dark_indicators %}
+.carousel-indicators button {
+    filter: invert(1) grayscale(100);
+}
+{% endif %}
+</style>
+{% endif %}

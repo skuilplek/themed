@@ -1,0 +1,55 @@
+{# Image Component
+    A component for displaying images with Bootstrap 5 styles.
+
+    Parameters:
+    Core Options:
+        - src: string - Image source URL (required)
+        - alt: string - Alt text for accessibility (required)
+        - width: string/int - Width in pixels or percentage
+        - height: string/int - Height in pixels or percentage
+        - class: string - Additional CSS classes
+        - attributes: array - Additional HTML attributes
+
+    Style Options:
+        - fluid: boolean - Whether the image should be responsive (img-fluid)
+        - thumbnail: boolean - Whether to show the image as a thumbnail (img-thumbnail)
+        - rounded: string/boolean - Rounded corners (true for rounded, 'circle' for rounded-circle, 'pill' for rounded-pill)
+
+    Figure Options:
+        - figure: boolean - Whether to wrap the image in a figure element
+        - caption: string - Caption text (requires figure=true)
+        - caption_align: string - Caption alignment (text-start, text-center, text-end)
+#}
+
+{% if content.figure %}
+    <figure class="figure{% if content.class %} {{ content.class }}{% endif %}">
+{% endif %}
+
+<img
+    src="{{ content.src }}"
+    alt="{{ content.alt }}"
+    class="
+        {% if content.fluid %}img-fluid{% endif %}
+        {% if content.thumbnail %}img-thumbnail{% endif %}
+        {% if content.rounded == true %}rounded{% endif %}
+        {% if content.rounded == 'circle' %}rounded-circle{% endif %}
+        {% if content.rounded == 'pill' %}rounded-pill{% endif %}
+        {% if content.figure %}figure-img{% endif %}
+        {% if not content.figure and content.class %}{{ content.class }}{% endif %}
+    "
+    {% if content.width %}width="{{ content.width }}"{% endif %}
+    {% if content.height %}height="{{ content.height }}"{% endif %}
+    {% if content.attributes %}
+        {{ content.attributes }}
+    {% endif %}
+>
+
+{% if content.figure and content.caption %}
+    <figcaption class="figure-caption{% if content.caption_align %} {{ content.caption_align }}{% endif %}">
+        {{ content.caption }}
+    </figcaption>
+{% endif %}
+
+{% if content.figure %}
+    </figure>
+{% endif %}

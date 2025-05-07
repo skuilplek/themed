@@ -1,0 +1,137 @@
+{# Card Component
+    A Bootstrap 5 component for creating versatile content containers with various styling options.
+
+    Parameters:
+    Core Options:
+        - id: string - Unique identifier for the card (optional)
+        - class: string - Additional CSS classes (optional)
+        - style: string - Inline styles (optional)
+        - horizontal: boolean - Display card horizontally (default: false)
+        - group: boolean - Card is part of a card group (default: false)
+
+    Style Options:
+        - variant: string - Card color variant
+            Values: 'primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'
+        - border: string - Border color variant (same values as variant)
+        - text_color: string - Text color variant (same values as variant)
+
+    Header Options:
+        - header: string|array - Header content or configuration
+            Simple: string - Direct header content
+            Advanced:
+                - content: string - Header content (required)
+                - class: string - Additional header classes
+                - variant: string - Header background variant (same values as card variant)
+
+    Image Options:
+        - image: array - Image configuration
+            - src: string - Image source URL (required)
+            - alt: string - Alternative text (default: 'Card image')
+            - position: string - Image position ('top', 'bottom', 'overlay')
+            - class: string - Additional image classes
+
+    Body Options:
+        - body: array - Body configuration
+            - title: string - Card title
+            - subtitle: string - Card subtitle
+            - content: string - Main content
+            - class: string - Additional body classes
+
+    Footer Options:
+        - footer: string|array - Footer content or configuration
+            Simple: string - Direct footer content
+            Advanced:
+                - content: string - Footer content (required)
+                - class: string - Additional footer classes
+                - variant: string - Footer background variant (same values as card variant)
+
+    Example Usage:
+    {{ component('content/card', {
+        id: 'featured-card',
+        variant: 'primary',
+        header: {
+            content: 'Featured Article',
+            variant: 'dark'
+        },
+        image: {
+            src: 'path/to/image.jpg',
+            alt: 'Article thumbnail',
+            position: 'top'
+        },
+        body: {
+            title: 'Card Title',
+            subtitle: 'Supporting text',
+            content: '<p>Some quick example text to build on the card title.</p>'
+        },
+        footer: 'Last updated 3 mins ago'
+    }) }}
+#}
+
+<div id="{{ content.id }}" 
+     class="card{% if content.variant %} bg-{{ content.variant }}{% endif %}{% if content.border %} border-{{ content.border }}{% endif %}{% if content.text_color %} text-{{ content.text_color }}{% endif %}{% if content.horizontal %} flex-row{% endif %}{% if content.class %} {{ content.class }}{% endif %}"
+     {% if content.style %}style="{{ content.style }}"{% endif %}>
+    
+    {# Header #}
+    {% if content.header %}
+        {% if content.header is iterable %}
+            <div class="card-header{% if content.header.variant %} bg-{{ content.header.variant }}{% endif %}{% if content.header.class %} {{ content.header.class }}{% endif %}">
+                {{ content.header.content|raw }}
+            </div>
+        {% else %}
+            <div class="card-header">{{ content.header|raw }}</div>
+        {% endif %}
+    {% endif %}
+
+    {# Image #}
+    {% if content.image %}
+        {% set image_class = 'card-img' ~ 
+            (content.image.position == 'top' ? '-top' : 
+             content.image.position == 'bottom' ? '-bottom' : '') %}
+        
+        {% if content.image.position == 'overlay' %}
+            <div class="card-img-overlay">
+                {% if content.body %}
+                    {% if content.body.title %}
+                        <h5 class="card-title">{{ content.body.title }}</h5>
+                    {% endif %}
+                    {% if content.body.subtitle %}
+                        <h6 class="card-subtitle mb-2 text-muted">{{ content.body.subtitle }}</h6>
+                    {% endif %}
+                    {% if content.body.content %}
+                        <div class="card-text">{{ content.body.content|raw }}</div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        {% endif %}
+        
+        <img src="{{ content.image.src }}" 
+             class="{{ image_class }}{% if content.image.class %} {{ content.image.class }}{% endif %}" 
+             alt="{{ content.image.alt|default('Card image') }}">
+    {% endif %}
+
+    {# Body #}
+    {% if content.body and content.image.position != 'overlay' %}
+        <div class="card-body{% if content.body.class %} {{ content.body.class }}{% endif %}">
+            {% if content.body.title %}
+                <h5 class="card-title">{{ content.body.title }}</h5>
+            {% endif %}
+            {% if content.body.subtitle %}
+                <h6 class="card-subtitle mb-2 text-muted">{{ content.body.subtitle }}</h6>
+            {% endif %}
+            {% if content.body.content %}
+                <div class="card-text">{{ content.body.content|raw }}</div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {# Footer #}
+    {% if content.footer %}
+        {% if content.footer is iterable %}
+            <div class="card-footer{% if content.footer.variant %} bg-{{ content.footer.variant }}{% endif %}{% if content.footer.class %} {{ content.footer.class }}{% endif %}">
+                {{ content.footer.content|raw }}
+            </div>
+        {% else %}
+            <div class="card-footer">{{ content.footer|raw }}</div>
+        {% endif %}
+    {% endif %}
+</div>

@@ -1,0 +1,79 @@
+{# Collapse Component
+    A Bootstrap 5 component for creating expandable/collapsible content sections with customizable triggers.
+
+    Parameters:
+    Core Options:
+        - id: string - Unique identifier for the collapse (required)
+        - content: string - Content to be collapsed/expanded (required)
+        - show: boolean - Whether the content is expanded by default (default: false)
+        - horizontal: boolean - Enable horizontal collapse animation (default: false)
+        - class: string - Additional classes for the collapse container
+
+    Trigger Options:
+        - trigger: array - Configuration for the collapse trigger (required)
+            - text: string - Text for the trigger button/link (required)
+            - tag: string - HTML element to use ('button' or 'a', default: 'button')
+            - variant: string - Button color variant (default: 'primary')
+                Values: 'primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'
+            - icon: string - Icon class to display before text (e.g., 'bi bi-chevron-down')
+            - class: string - Additional classes for the trigger element
+
+    Example Usage:
+    {{ component('content/collapse', {
+        id: 'readMore',
+        trigger: {
+            text: 'Read More',
+            variant: 'primary',
+            icon: 'bi bi-chevron-down'
+        },
+        content: '<p>This is the collapsible content that can be toggled.</p>',
+        show: false
+    }) }}
+
+    Link Example:
+    {{ component('content/collapse', {
+        id: 'details',
+        trigger: {
+            text: 'View Details',
+            tag: 'a',
+            class: 'text-decoration-none'
+        },
+        content: '<div class="p-3 border">Detailed content here</div>',
+        horizontal: true
+    }) }}
+#}
+
+{%- set trigger_tag = content.trigger.tag|default('button') -%}
+{%- set trigger_class = content.trigger.class|default('') -%}
+{%- set trigger_variant = content.trigger.variant|default('primary') -%}
+
+{%- if trigger_tag == 'button' -%}
+    <button class="btn btn-{{ trigger_variant }} {{ trigger_class }}"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#{{ content.id }}"
+            aria-expanded="{% if content.show %}true{% else %}false{% endif %}"
+            aria-controls="{{ content.id }}">
+        {%- if content.trigger.icon -%}
+            <i class="{{ content.trigger.icon }} me-2" aria-hidden="true"></i>
+        {%- endif -%}
+        {{ content.trigger.text }}
+    </button>
+{%- else -%}
+    <a href="#{{ content.id }}"
+       class="{{ trigger_class }}"
+       data-bs-toggle="collapse"
+       role="button"
+       aria-expanded="{% if content.show %}true{% else %}false{% endif %}"
+       aria-controls="{{ content.id }}">
+        {%- if content.trigger.icon -%}
+            <i class="{{ content.trigger.icon }} me-2" aria-hidden="true"></i>
+        {%- endif -%}
+        {{ content.trigger.text }}
+    </a>
+{%- endif -%}
+
+<div class="collapse{% if content.show %} show{% endif %}{% if content.horizontal %} collapse-horizontal{% endif %}{% if content.class %} {{ content.class }}{% endif %}"
+     id="{{ content.id }}">
+    {{ content.content|raw }}
+</div>

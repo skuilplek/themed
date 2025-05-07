@@ -1,0 +1,137 @@
+{# Typography Component
+    A Bootstrap 5 component for consistent and flexible text styling with comprehensive typography options.
+
+    Parameters:
+    Core Options:
+        - tag: string - HTML tag to use (h1-h6, p, span, etc.) (default: 'p')
+        - content: string - The text content (required)
+        - class: string - Additional CSS classes
+        - attributes: array - Additional HTML attributes
+
+    Display Options:
+        - display: string - Display heading size
+            Values: '1', '2', '3', '4', '5', '6'
+        - lead: boolean - Use lead paragraph style (default: false)
+        - responsive: boolean - Enable responsive font sizing (default: false)
+
+    Text Style Options:
+        - muted: boolean - Use muted text color (default: false)
+        - monospace: boolean - Use monospace font (default: false)
+        - font: string - Font weight
+            Values: 'light', 'normal', 'bold'
+        - font_style: string - Font style
+            Values: 'italic', 'normal'
+
+    Text Formatting Options:
+        - align: string - Text alignment
+            Values: 'start', 'center', 'end', 'justify'
+        - transform: string - Text transformation
+            Values: 'lowercase', 'uppercase', 'capitalize'
+        - decoration: string - Text decoration
+            Values: 'underline', 'line-through', 'none'
+        - wrap: string - Text wrapping
+            Values: 'wrap', 'nowrap', 'break'
+        - truncate: boolean - Truncate with ellipsis (default: false)
+
+    Example Usage:
+    {{ component('content/typography', {
+        tag: 'h1',
+        content: 'Welcome to Our Site',
+        display: '1',
+        align: 'center',
+        font: 'bold'
+    }) }}
+
+    Paragraph Example:
+    {{ component('content/typography', {
+        content: 'This is a lead paragraph with custom styling.',
+        lead: true,
+        font_style: 'italic',
+        class: 'mb-4'
+    }) }}
+
+    Responsive Example:
+    {{ component('content/typography', {
+        content: 'Responsive text that adapts to screen size',
+        responsive: true,
+        align: 'center',
+        transform: 'uppercase'
+    }) }}
+#}
+
+{% set tag = content.tag|default('p') %}
+{% set classes = [] %}
+
+{# Base classes #}
+{% if content.display %}
+    {% set classes = classes|merge(['display-' ~ content.display]) %}
+{% endif %}
+
+{% if content.lead %}
+    {% set classes = classes|merge(['lead']) %}
+{% endif %}
+
+{% if content.muted %}
+    {% set classes = classes|merge(['text-muted']) %}
+{% endif %}
+
+{# Alignment #}
+{% if content.align %}
+    {% set classes = classes|merge(['text-' ~ content.align]) %}
+{% endif %}
+
+{# Transformation #}
+{% if content.transform %}
+    {% set classes = classes|merge(['text-' ~ content.transform]) %}
+{% endif %}
+
+{# Decoration #}
+{% if content.decoration %}
+    {% set classes = classes|merge(['text-decoration-' ~ content.decoration]) %}
+{% endif %}
+
+{# Font weight #}
+{% if content.font %}
+    {% set classes = classes|merge(['fw-' ~ content.font]) %}
+{% endif %}
+
+{# Font style #}
+{% if content.font_style %}
+    {% set classes = classes|merge(['fst-' ~ content.font_style]) %}
+{% endif %}
+
+{# Text wrapping #}
+{% if content.wrap %}
+    {% set classes = classes|merge(['text-' ~ content.wrap]) %}
+{% endif %}
+
+{# Truncate #}
+{% if content.truncate %}
+    {% set classes = classes|merge(['text-truncate']) %}
+{% endif %}
+
+{# Monospace #}
+{% if content.monospace %}
+    {% set classes = classes|merge(['font-monospace']) %}
+{% endif %}
+
+{# Responsive font sizing #}
+{% if content.responsive %}
+    {% set classes = classes|merge(['fs-1', 'fs-sm-2', 'fs-md-3', 'fs-lg-4', 'fs-xl-5']) %}
+{% endif %}
+
+{# Additional classes #}
+{% if content.class %}
+    {% set classes = classes|merge([content.class]) %}
+{% endif %}
+
+<{{ tag }}
+    class="{{ classes|join(' ')|trim }}"
+    {% if content.attributes %}
+        {% for attr, value in content.attributes %}
+            {{ attr }}="{{ value }}"
+        {% endfor %}
+    {% endif %}
+>
+    {{ content.content|raw }}
+</{{ tag }}>
