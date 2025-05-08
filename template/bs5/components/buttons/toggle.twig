@@ -1,0 +1,111 @@
+{# Toggle Button Component
+   A component for creating toggle buttons with Bootstrap 5 styles.
+   
+   Core Parameters:
+   - type: string - Toggle type (button, checkbox, radio) (default: 'button')
+   - text: string - Button text (required)
+   - name: string - Input name for radio/checkbox behavior (required for radio/checkbox)
+   - value: string - Input value (default: '1')
+   - id: string - Unique identifier (auto-generated if not provided)
+
+   Style Parameters:
+   - variant: string - Button variant (primary, secondary, success, danger, warning, info, light, dark) (default: 'primary')
+   - size: string - Button size (sm, lg) (optional)
+   - icon: string - Icon name (e.g., 'arrow-right', 'check') (optional)
+   - class: string - Additional CSS classes (optional)
+
+   State Parameters:
+   - pressed: boolean - Initial pressed state (default: false)
+   - disabled: boolean - Disabled state (default: false)
+   
+   Advanced Parameters:
+   - attributes: array - Additional HTML attributes (optional)
+   
+   Examples:
+   1. Basic Toggle Button:
+   {{ component('buttons/toggle', {
+      text: 'Toggle Me',
+      type: 'button',
+      variant: 'primary'
+   }) }}
+
+   2. Radio Toggle:
+   {{ component('buttons/toggle', {
+      type: 'radio',
+      name: 'options',
+      value: 'option1',
+      text: 'Option 1',
+      variant: 'success'
+   }) }}
+
+   3. Checkbox with Icon:
+   {{ component('buttons/toggle', {
+      type: 'checkbox',
+      name: 'features',
+      text: 'Enable Feature',
+      icon: 'check',
+      variant: 'info'
+   }) }}
+#}
+
+{% set button_classes = ['btn'] %}
+
+{# Add variant class #}
+{% set variant = content.variant|default('primary') %}
+{% set button_classes = button_classes|merge(['btn-' ~ variant]) %}
+
+{# Add size class #}
+{% if content.size %}
+    {% set button_classes = button_classes|merge(['btn-' ~ content.size]) %}
+{% endif %}
+
+{# Add custom classes #}
+{% if content.class %}
+    {% set button_classes = button_classes|merge([content.class]) %}
+{% endif %}
+
+{# Determine the type #}
+{% set type = content.type|default('button') %}
+{% set input_type = type == 'radio' ? 'radio' : (type == 'checkbox' ? 'checkbox' : null) %}
+
+{% if input_type %}
+    {# Radio/Checkbox toggle #}
+    {% set toggle_id = content.id|default('toggle-' ~ random(100000)) %}
+    <input 
+        type="{{ input_type }}" 
+        class="btn-check" 
+        name="{{ content.name }}" 
+        id="{{ toggle_id }}"
+        value="{{ content.value|default('1') }}"
+        {% if content.pressed %}checked{% endif %}
+        {% if content.disabled %}disabled{% endif %}
+        autocomplete="off"
+    >
+    <label
+        for="{{ toggle_id }}"
+{% else %}
+    {# Regular toggle button #}
+    <button
+        type="button"
+        data-bs-toggle="button"
+        aria-pressed="{{ content.pressed|default(false) ? 'true' : 'false' }}"
+{% endif %}
+    class="{{ button_classes|join(' ') }}"
+    {% if content.disabled %}disabled{% endif %}
+    {% if content.attributes %}
+        {% for attr, value in content.attributes %}
+            {{ attr }}="{{ value }}"
+        {% endfor %}
+    {% endif %}
+>
+    {% if content.icon %}
+        {{ component('icons/icon', { name: content.icon, class: content.text ? 'me-2' : '' }) }}
+    {% endif %}
+    {% if content.text is defined %}
+        {{ content.text }}
+    {% endif %}
+{% if input_type %}
+    </label>
+{% else %}
+    </button>
+{% endif %}

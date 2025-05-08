@@ -1,0 +1,62 @@
+{# Price Component
+   Parameters:
+   - plans: array - Array of pricing plans (required)
+     Each plan should have:
+     - title: string - Plan title (e.g., 'Free', 'Pro')
+     - price: number - Plan price (e.g., 0, 15)
+     - period: string - Billing period (e.g., '/mo')
+     - features: array - List of features included in the plan
+     - button: object - Button configuration
+       - text: string - Button text (e.g., 'Sign up for free')
+       - variant: string - Button variant (e.g., 'primary', 'outline-primary')
+     - highlighted: boolean - Whether this is a highlighted/featured plan (optional)
+   - class: string - Additional CSS classes for the container (optional)
+#}
+
+{%- set containerClasses = [
+    'row',
+    'row-cols-1',
+    'row-cols-md-3',
+    'mb-3',
+    'text-center',
+    content.class
+]|filter(v => v)|join(' ') -%}
+
+<div class="{{ containerClasses }}">
+    {%- for plan in content.plans -%}
+        {%- set cardClasses = [
+            'card',
+            'mb-4',
+            'rounded-3',
+            'shadow-sm',
+            plan.highlighted ? 'border-primary'
+        ]|filter(v => v)|join(' ') -%}
+
+        {%- set headerClasses = [
+            'card-header',
+            'py-3',
+            plan.highlighted ? 'text-bg-primary border-primary'
+        ]|filter(v => v)|join(' ') -%}
+
+        <div class="col">
+            <div class="{{ cardClasses }}">
+                <div class="{{ headerClasses }}">
+                    <h4 class="my-0 fw-normal">{{ plan.title }}</h4>
+                </div>
+                <div class="card-body">
+                    <h1 class="card-title pricing-card-title">
+                        ${{ plan.price }}<small class="text-body-secondary fw-light">{{ plan.period }}</small>
+                    </h1>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        {%- for feature in plan.features -%}
+                            <li>{{ feature }}</li>
+                        {%- endfor -%}
+                    </ul>
+                    <button type="button" class="w-100 btn btn-lg btn-{{ plan.button.variant }}">
+                        {{- plan.button.text -}}
+                    </button>
+                </div>
+            </div>
+        </div>
+    {%- endfor -%}
+</div>

@@ -42,7 +42,7 @@ class ThemedComponent
      */
     protected static array $parameterCache = [];
 
-    protected bool $debugging;
+    protected bool $debugging = false;
     /**
      * Level 0 - Only log the component name
      * Level 1 - Log the component name and the content

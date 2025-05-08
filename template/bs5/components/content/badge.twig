@@ -1,0 +1,29 @@
+{# Badge Component
+   Parameters:
+   - text: string - Text to display in the badge (required)
+   - type: string - Badge type/color (optional, default: 'secondary')
+     Values: primary, secondary, success, danger, warning, info, light, dark
+   - pill: boolean - Whether to display as a pill badge (optional, default: false)
+   - positioned: boolean - Whether to position the badge (optional, default: false)
+   - position: object - Position settings when positioned is true (optional)
+     - top: string - Top position (e.g., '0')
+     - start: string - Start position (e.g., '100')
+   - class: string - Additional CSS classes (optional)
+   - visually_hidden: string - Hidden text for screen readers (optional)
+#}
+
+{%- set type = content.type|default('secondary') -%}
+{%- set classes = [
+    'badge',
+    content.pill ? 'rounded-pill',
+    'text-bg-' ~ type,
+    content.positioned ? 'position-absolute top-' ~ (content.position.top|default('0')) ~ ' start-' ~ (content.position.start|default('100')) ~ ' translate-middle',
+    content.class
+]|filter(v => v)|join(' ') -%}
+
+<span class="{{ classes }}">
+    {{- content.text -}}
+    {%- if content.visually_hidden -%}
+        <span class="visually-hidden">{{ content.visually_hidden }}</span>
+    {%- endif -%}
+</span>
