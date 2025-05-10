@@ -34,13 +34,13 @@ Create your own components by extending `ThemedComponent` found in `src/`. Use t
 
 ## Guidelines
 
-Refer to [GUIDELINES.md](GUIDELINES.md) for coding standards and best practices when contributing to or extending the framework. Detailed instructions are provided for creating new components and custom themes.
+Refer to [GUIDELINES.md](./GUIELINES.md) for coding standards and best practices when contributing to or extending the framework. Detailed instructions are provided for creating new components and custom themes.
 
 ## Additional Documentation
 
-- [GUIDELINES.md](GUIDELINES.md): Provides a technical overview of the Themed framework, including core functionality, directory structure, and environment variables.
-- [OVERVIEW.md](OVERVIEW.md): Offers additional details about the project's purpose and structure, complementing the information in this README.
+- [GUIDELINES.md](./GUIDELINES.md): Provides a technical overview of the Themed framework, including core functionality, directory structure, and environment variables.
+- [OVERVIEW.md](./OVERVIEW.md): Offers additional details about the project's purpose and structure, complementing the information in this README.
 
 ## License
 
-This project is licensed under the terms detailed in [LGPL-3.0-or-later](LICENSE.md).
+This project is licensed under the terms detailed in [LGPL-3.0-or-later](./LICENSE.md).
