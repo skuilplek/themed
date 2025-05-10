@@ -1,0 +1,27 @@
+{# Radio Button Component
+   - name: string - Radio button name attribute (required)
+   - options: array - Array of options with value and label keys (required)
+   - selected: string - Currently selected value (optional)
+   - disabled: boolean - Whether all options are disabled (default: false)
+   - class: string - Additional CSS classes for the container (optional)
+   - inline: boolean - Display radio buttons inline (default: false)
+#}
+
+<div class="{{ content.class|default('') }}">
+    {% for option in content.options %}
+        <div class="form-check {% if content.inline %}form-check-inline{% endif %}">
+            <input
+                type="radio"
+                name="{{ content.name }}"
+                id="{{ content.name }}_{{ option.value }}"
+                value="{{ option.value }}"
+                {% if content.selected == option.value %}checked{% endif %}
+                {% if content.disabled or option.disabled %}disabled{% endif %}
+                class="form-check-input"
+            >
+            <label class="form-check-label" for="{{ content.name }}_{{ option.value }}">
+                {{ option.label }}
+            </label>
+        </div>
+    {% endfor %}
+</div>

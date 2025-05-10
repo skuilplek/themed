@@ -1,0 +1,24 @@
+{# Form Group Component
+   - label: string - Label text (required)
+   - for: string - ID of the form control this label is for (required)
+   - help: string - Help text to display below the form control (optional)
+   - error: string - Error message to display (optional)
+   - required: boolean - Whether to show required indicator (default: false)
+   - class: string - Additional CSS classes (optional)
+#}
+
+<div class="mb-3 {{ content.class|default('') }}">
+    <label class="form-label" for="{{ content.for }}">
+        {{ content.label }}
+        {% if content.required %}
+            <span class="text-danger">*</span>
+        {% endif %}
+    </label>
+    {{ content.control|raw }}
+    {% if content.help %}
+        <div class="form-text">{{ content.help }}</div>
+    {% endif %}
+    {% if content.error %}
+        <div class="invalid-feedback d-block">{{ content.error }}</div>
+    {% endif %}
+</div>

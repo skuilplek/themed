@@ -1,0 +1,23 @@
+{# Input Field Component
+   - name: string - Input field name attribute (required)
+   - type: string - Input type (text, email, password, etc.) (default: text)
+   - value: string - Input value (optional)
+   - placeholder: string - Placeholder text (optional)
+   - required: boolean - Whether the field is required (default: false)
+   - disabled: boolean - Whether the field is disabled (default: false)
+   - readonly: boolean - Whether the field is readonly (default: false)
+   - class: string - Additional CSS classes (optional)
+   - id: string - Input ID attribute (optional, defaults to name)
+#}
+
+<input 
+    type="{{ content.type|default('text') }}"
+    name="{{ content.name }}"
+    id="{{ content.id|default(content.name) }}"
+    value="{{ content.value|default('') }}"
+    {% if content.placeholder %}placeholder="{{ content.placeholder }}"{% endif %}
+    {% if content.required %}required{% endif %}
+    {% if content.disabled %}disabled{% endif %}
+    {% if content.readonly %}readonly{% endif %}
+    class="form-control {{ content.class|default('') }}"
+>

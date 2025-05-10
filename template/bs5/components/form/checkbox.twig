@@ -1,0 +1,24 @@
+{# Checkbox Component
+   - name: string - Checkbox name attribute (required)
+   - label: string - Label text (required)
+   - checked: boolean - Whether checkbox is checked (default: false)
+   - value: string - Checkbox value attribute (default: '1')
+   - disabled: boolean - Whether the field is disabled (default: false)
+   - class: string - Additional CSS classes (optional)
+   - id: string - Checkbox ID attribute (optional, defaults to name)
+#}
+
+<div class="form-check {{ content.class|default('') }}">
+    <input
+        type="checkbox"
+        name="{{ content.name }}"
+        id="{{ content.id|default(content.name) }}"
+        value="{{ content.value|default('1') }}"
+        {% if content.checked %}checked{% endif %}
+        {% if content.disabled %}disabled{% endif %}
+        class="form-check-input"
+    >
+    <label class="form-check-label" for="{{ content.id|default(content.name) }}">
+        {{ content.label }}
+    </label>
+</div>

@@ -1,0 +1,94 @@
+{# Input Group Component
+   - name: string - Input field name attribute (required)
+   - type: string - Input type (text, email, password, etc.) (default: text)
+   - value: string - Input value (optional)
+   - placeholder: string - Placeholder text (optional)
+   - prepend: string|array - Content to prepend (text or array of items) (optional)
+   - append: string|array - Content to append (text or array of items) (optional)
+   - required: boolean - Whether the field is required (default: false)
+   - disabled: boolean - Whether the field is disabled (default: false)
+   - readonly: boolean - Whether the field is readonly (default: false)
+   - class: string - Additional CSS classes for the input group (optional)
+   - inputClass: string - Additional CSS classes for the input element (optional)
+   - id: string - Input ID attribute (optional, defaults to name)
+   - size: string - Size of the input group (sm, lg) (optional)
+   - control: string - Form control HTML (optional, defaults to input)
+   - middle: string|array - Content to place between inputs (optional)
+   - secondControl: string - Second form control HTML (optional)
+#}
+
+<div class="input-group {% if content.size %}input-group-{{ content.size }}{% endif %} {{ content.class|default('') }}">
+    {% if content.prepend is defined %}
+        {% if content.prepend is iterable %}
+            {% for item in content.prepend %}
+                {% if item matches '/<(button|div|input|textarea|select)/' %}
+                    {{ item|raw }}
+                {% else %}
+                    <span class="input-group-text">{{ item }}</span>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            {% if content.prepend matches '/<(button|div|input|textarea|select)/' %}
+                {{ content.prepend|raw }}
+            {% else %}
+                <span class="input-group-text">{{ content.prepend }}</span>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+
+    {% if content.control is defined %}
+        {{ content.control|raw }}
+    {% else %}
+        <input 
+            type="{{ content.type|default('text') }}"
+            name="{{ content.name }}"
+            id="{{ content.id|default(content.name) }}"
+            value="{{ content.value|default('') }}"
+            {% if content.placeholder %}placeholder="{{ content.placeholder }}"{% endif %}
+            {% if content.required %}required{% endif %}
+            {% if content.disabled %}disabled{% endif %}
+            {% if content.readonly %}readonly{% endif %}
+            class="form-control {{ content.inputClass|default('') }}"
+        >
+    {% endif %}
+
+    {% if content.middle is defined %}
+        {% if content.middle is iterable %}
+            {% for item in content.middle %}
+                {% if item matches '/<(button|div|input|textarea|select)/' %}
+                    {{ item|raw }}
+                {% else %}
+                    <span class="input-group-text">{{ item }}</span>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            {% if content.middle matches '/<(button|div|input|textarea|select)/' %}
+                {{ content.middle|raw }}
+            {% else %}
+                <span class="input-group-text">{{ content.middle }}</span>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+
+    {% if content.secondControl is defined %}
+        {{ content.secondControl|raw }}
+    {% endif %}
+
+    {% if content.append is defined %}
+        {% if content.append is iterable %}
+            {% for item in content.append %}
+                {% if item matches '/<(button|div|input|textarea|select)/' %}
+                    {{ item|raw }}
+                {% else %}
+                    <span class="input-group-text">{{ item }}</span>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            {% if content.append matches '/<(button|div|input|textarea|select)/' %}
+                {{ content.append|raw }}
+            {% else %}
+                <span class="input-group-text">{{ content.append }}</span>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+</div>

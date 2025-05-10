@@ -1,35 +1,65 @@
 {# Button Component
    A component for creating buttons with Bootstrap 5 styles.
    
-   Parameters:
-    - type: string - Button type (button, submit, reset) (optional)
-    - variant: string - Button variant (primary, secondary, success, danger, warning, info, light, dark, link) (optional)
-    - outline: boolean - Whether to use outline variant (optional)
-    - size: string - Button size (sm, lg) (optional)
+   Core Parameters:
     - text: string - Button text (optional)
-    - icon: string - Icon name (e.g., 'arrow-right', 'check') (optional)
-    - icon_position: string - Icon position (start, end) (optional)
-    - block: boolean - Whether to make the button full width (optional)
-    - disabled: boolean - Disable the button (optional)
-    - active: boolean - Set active state (optional)
-    - loading: boolean - Show loading state (optional)
-    - loading_text: string - Text to show while loading (optional)
-    - tag: string - HTML tag to use (button, a, input) (optional)
-    - href: string - URL for anchor tag buttons (optional)
+    - type: string - Button type (button, submit, reset) (default: 'button')
+    - tag: string - HTML tag to use (button, a, input) (default: 'button')
+    - href: string - URL for anchor tag buttons (required when tag is 'a')
+
+   Style Parameters:
+    - variant: string - Button variant (primary, secondary, success, danger, warning, info, light, dark, link) (default: 'primary')
+    - outline: boolean - Whether to use outline variant (default: false)
+    - size: string - Button size (sm, lg) (optional)
+    - block: boolean - Whether to make the button full width (default: false)
     - class: string - Additional CSS classes (optional)
+
+   Icon Parameters:
+    - icon: string - Icon name (e.g., 'arrow-right', 'check') (optional)
+    - icon_position: string - Icon position (start, end) (default: 'start')
+
+   State Parameters:
+    - disabled: boolean - Disable the button (default: false)
+    - active: boolean - Set active state (default: false)
+    - loading: boolean - Show loading state (default: false)
+    - loading_text: string - Text to show while loading (default: 'Loading...')
+
+   Advanced Parameters:
     - attributes: string - Additional HTML attributes (optional)
 
+   Example Usage:
+   1. Basic Button:
+   {{ component('buttons/button', {
+       text: 'Click Me',
+       variant: 'primary'
+   }) }}
+
+   2. Link Button with Icon:
+   {{ component('buttons/button', {
+       text: 'Learn More',
+       tag: 'a',
+       href: '#',
+       icon: 'arrow-right',
+       icon_position: 'end'
+   }) }}
+
+   3. Loading State:
+   {{ component('buttons/button', {
+       text: 'Save Changes',
+       variant: 'success',
+       loading: true,
+       loading_text: 'Saving...'
+   }) }}
 #}
 
 {% set button_classes = ['btn'] %}
 
 {# Add variant classes #}
-{% if content.variant %}
-    {% if content.outline %}
-        {% set button_classes = button_classes|merge(['btn-outline-' ~ content.variant]) %}
-    {% else %}
-        {% set button_classes = button_classes|merge(['btn-' ~ content.variant]) %}
-    {% endif %}
+{% set variant = content.variant|default('primary') %}
+{% if content.outline %}
+    {% set button_classes = button_classes|merge(['btn-outline-' ~ variant]) %}
+{% else %}
+    {% set button_classes = button_classes|merge(['btn-' ~ variant]) %}
 {% endif %}
 
 {# Add size classes #}
@@ -79,24 +109,19 @@
 >
     {% if content.loading %}
         <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-        {% if content.loading_text %}
-            {{ content.loading_text }}
-        {% else %}
-            Loading...
-        {% endif %}
+        {{ content.loading_text|default('Loading...') }}
     {% else %}
-        {% if content.icon and content.icon_position != 'end' %}
-{{ component('icons/icon', { name: content.icon, class: content.text ? 'me-2' : '' }) }}
-
+        {% set icon_position = content.icon_position|default('start') %}
+        {% if content.icon and icon_position != 'end' %}
+            {{ component('icons/icon', { name: content.icon, class: content.text ? 'me-2' : '' }) }}
         {% endif %}
         
         {% if content.text %}
             {{ content.text }}
         {% endif %}
         
-        {% if content.icon and content.icon_position == 'end' %}
-{{ component('icons/icon', { name: content.icon, class: content.text ? 'ms-2' : '' }) }}
-
+        {% if content.icon and icon_position == 'end' %}
+            {{ component('icons/icon', { name: content.icon, class: content.text ? 'ms-2' : '' }) }}
         {% endif %}
     {% endif %}
 </{{ tag }}>

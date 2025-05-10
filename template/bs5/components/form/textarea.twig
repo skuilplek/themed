@@ -1,0 +1,22 @@
+{# Textarea Component
+   - name: string - Textarea name attribute (required)
+   - value: string - Textarea content (optional)
+   - rows: integer - Number of visible text lines (default: 3)
+   - placeholder: string - Placeholder text (optional)
+   - required: boolean - Whether the field is required (default: false)
+   - disabled: boolean - Whether the field is disabled (default: false)
+   - readonly: boolean - Whether the field is readonly (default: false)
+   - class: string - Additional CSS classes (optional)
+   - id: string - Textarea ID attribute (optional, defaults to name)
+#}
+
+<textarea
+    name="{{ content.name }}"
+    id="{{ content.id|default(content.name) }}"
+    rows="{{ content.rows|default(3) }}"
+    {% if content.placeholder %}placeholder="{{ content.placeholder }}"{% endif %}
+    {% if content.required %}required{% endif %}
+    {% if content.disabled %}disabled{% endif %}
+    {% if content.readonly %}readonly{% endif %}
+    class="form-control {{ content.class|default('') }}"
+>{{ content.value|default('') }}</textarea>

@@ -1,0 +1,28 @@
+{# Select Component
+   - name: string - Select name attribute (required)
+   - options: array - Array of options with value and label keys (required)
+   - selected: string - Currently selected value (optional)
+   - placeholder: string - Placeholder option text (optional)
+   - required: boolean - Whether selection is required (default: false)
+   - disabled: boolean - Whether the field is disabled (default: false)
+   - class: string - Additional CSS classes (optional)
+   - id: string - Select ID attribute (optional, defaults to name)
+#}
+
+<select
+    name="{{ content.name }}"
+    id="{{ content.id|default(content.name) }}"
+    {% if content.required %}required{% endif %}
+    {% if content.disabled %}disabled{% endif %}
+    class="form-select {{ content.class|default('') }}"
+>
+    {% if content.placeholder %}
+        <option value="">{{ content.placeholder }}</option>
+    {% endif %}
+    {% for option in content.options %}
+        <option 
+            value="{{ option.value }}"
+            {% if content.selected == option.value %}selected{% endif %}
+        >{{ option.label }}</option>
+    {% endfor %}
+</select>

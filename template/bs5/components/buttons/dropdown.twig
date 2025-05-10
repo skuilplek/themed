@@ -1,0 +1,32 @@
+{# Dropdown Button Component
+   - text: string - Button text (required)
+   - type: string - Button type (primary, secondary, success, etc.) (optional)
+   - items: array - Array of dropdown items (required)
+   - menuEnd: bool - Whether to align menu to the end (optional)
+   - class: string - Additional CSS classes (optional)
+   - segmented: bool - Whether to use segmented style (optional)
+   - splitButtonClass: string - Additional CSS classes for split button (optional)
+#}
+<div class="btn-group">
+    {% if content.segmented %}
+        <button type="button" class="btn btn-{{ content.type|default('primary') }} {{ content.class|default('') }}">
+            {{ content.text }}
+        </button>
+        <button type="button" class="btn btn-{{ content.type|default('primary') }} dropdown-toggle dropdown-toggle-split {{ content.splitButtonClass|default('') }}" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="visually-hidden">Toggle Dropdown</span>
+        </button>
+    {% else %}
+        <button type="button" class="btn btn-{{ content.type|default('primary') }} dropdown-toggle {{ content.class|default('') }}" data-bs-toggle="dropdown" aria-expanded="false">
+            {{ content.text }}
+        </button>
+    {% endif %}
+    <ul class="dropdown-menu{% if content.menuEnd %} dropdown-menu-end{% endif %}">
+        {% for item in content.items %}
+            {% if item.divider is defined and item.divider %}
+                <li><hr class="dropdown-divider"></li>
+            {% else %}
+                <li><a class="dropdown-item" href="{{ item.href|default('#') }}">{{ item.text }}</a></li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</div>

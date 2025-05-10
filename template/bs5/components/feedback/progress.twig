@@ -1,0 +1,23 @@
+{# Progress Component
+   - value: number - Current progress value (required)
+   - min: number - Minimum value (default: 0)
+   - max: number - Maximum value (default: 100)
+   - label: string - Accessible label (default: Basic example)
+   - class: string - Additional CSS classes (optional)
+   - showLabel: bool - Whether to show the value as text (optional)
+   - variant: string - Color variant (primary, success, info, warning, danger) (optional)
+   - striped: bool - Whether to show striped pattern (optional)
+   - animated: bool - Whether to animate the stripes (optional)
+   - textBg: bool - Whether to use text-bg-* classes for better text contrast (optional)
+#}
+<div class="progress {{ content.class|default('') }}" 
+     role="progressbar" 
+     aria-label="{{ content.label|default('Basic example') }}" 
+     aria-valuenow="{{ content.value|default(0) }}" 
+     aria-valuemin="{{ content.min|default(0) }}" 
+     aria-valuemax="{{ content.max|default(100) }}">
+    <div class="progress-bar{% if content.variant %}{% if content.textBg %} text-bg-{{ content.variant }}{% else %} bg-{{ content.variant }}{% endif %}{% endif %}{% if content.striped %} progress-bar-striped{% endif %}{% if content.animated %} progress-bar-animated{% endif %}" 
+         style="width: {{ ((content.value|default(0)|number_format) / (content.max|default(100)|number_format) * 100)|round }}%">
+        {% if content.showLabel %}{{ content.value|default(0) }}%{% endif %}
+    </div>
+</div>

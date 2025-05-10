@@ -1,0 +1,18 @@
+{# Switch Component
+   - id: string - ID for the switch input (required)
+   - name: string - Name for the switch input (required)
+   - label: string - Label text (required)
+   - checked: bool - Whether the switch is checked (optional)
+   - disabled: bool - Whether the switch is disabled (optional)
+   - class: string - Additional CSS classes (optional)
+#}
+<div class="form-check form-switch {{ content.class|default('') }}">
+    <input class="form-check-input" 
+           type="checkbox" 
+           role="switch" 
+           id="{{ content.id }}" 
+           name="{{ content.name }}"
+           {% if content.checked %}checked{% endif %}
+           {% if content.disabled %}disabled{% endif %}>
+    <label class="form-check-label" for="{{ content.id }}">{{ content.label }}</label>
+</div>

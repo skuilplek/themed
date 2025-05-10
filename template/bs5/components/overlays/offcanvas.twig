@@ -1,0 +1,48 @@
+{# Offcanvas Component
+   - id: string - Unique ID for the offcanvas (required)
+   - title: string - Title text for the offcanvas header (required)
+   - content: string|array - Content for the offcanvas body (required)
+   - triggers: array - Array of trigger buttons/links, each with:
+     - text: string - Text for the trigger (required)
+     - type: string - Type of trigger (button, link) (default: button)
+     - class: string - Additional CSS classes for the trigger (optional)
+   - placement: string - Offcanvas placement (start, end, top, bottom) (default: start)
+   - class: string - Additional CSS classes for the offcanvas (optional)
+   - scroll: bool - Allow body scrolling (optional)
+   - backdrop: bool - Show backdrop (optional)
+   - static: bool - Static backdrop, doesn't close on click outside (optional)
+#}
+{% set offcanvasId = content.id %}
+{% for trigger in content.triggers %}
+{% if trigger.type == 'link' %}
+<a class="btn btn-primary {{ trigger.class|default('') }}" data-bs-toggle="offcanvas" href="#{{ offcanvasId }}" role="button" aria-controls="{{ offcanvasId }}">
+  {{ trigger.text }}
+</a>
+{% else %}
+<button class="btn btn-primary {{ trigger.class|default('') }}" type="button" data-bs-toggle="offcanvas" data-bs-target="#{{ offcanvasId }}" aria-controls="{{ offcanvasId }}">
+  {{ trigger.text }}
+</button>
+{% endif %}
+{% endfor %}
+
+<div class="offcanvas offcanvas-{{ content.placement|default('start') }} {{ content.class|default('') }}" 
+     tabindex="-1" 
+     id="{{ offcanvasId }}" 
+     aria-labelledby="{{ offcanvasId }}Label"
+     {% if content.scroll %}data-bs-scroll="true"{% endif %}
+     {% if content.backdrop == false %}data-bs-backdrop="false"{% endif %}
+     {% if content.static %}data-bs-backdrop="static"{% endif %}>
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="{{ offcanvasId }}Label">{{ content.title }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    {% if content.content is iterable %}
+      {% for item in content.content %}
+        <div class="mb-3">{{ item|raw }}</div>
+      {% endfor %}
+    {% else %}
+      {{ content.content|raw }}
+    {% endif %}
+  </div>
+</div>

@@ -1,0 +1,23 @@
+{# Progress Stacked Component
+   - segments: array - Array of progress segments, each with:
+     - value: number - Progress value (required)
+     - label: string - Segment label (default: Segment {n})
+     - variant: string - Color variant (primary, success, info, warning, danger) (optional)
+     - min: number - Minimum value (default: 0)
+     - max: number - Maximum value (default: 100)
+     - textBg: bool - Whether to use text-bg-* classes for better text contrast (optional)
+   - class: string - Additional CSS classes (optional)
+#}
+<div class="progress-stacked {{ content.class|default('') }}">
+    {% for segment in content.segments %}
+    <div class="progress" 
+         role="progressbar" 
+         aria-label="{{ segment.label|default('Segment ' ~ loop.index) }}" 
+         aria-valuenow="{{ segment.value }}" 
+         aria-valuemin="{{ segment.min|default(0) }}" 
+         aria-valuemax="{{ segment.max|default(100) }}"
+         style="width: {{ segment.value }}%">
+        <div class="progress-bar{% if segment.variant %}{% if segment.textBg %} text-bg-{{ segment.variant }}{% else %} bg-{{ segment.variant }}{% endif %}{% endif %}"></div>
+    </div>
+    {% endfor %}
+</div>

@@ -1,0 +1,32 @@
+{# Pagination Component
+   - items: array - Array of page items, each with:
+     - text: string - Text to display (required)
+     - url: string - URL to link to (default: #)
+     - active: bool - Whether this is the active page (optional)
+     - disabled: bool - Whether this item is disabled (optional)
+     - label: string - Aria label for the link (optional)
+     - icon: string - Icon HTML to display instead of text (optional)
+   - label: string - Aria label for the pagination nav (default: Page navigation)
+   - class: string - Additional CSS classes (optional)
+   - size: string - Size variant (sm, lg) (optional)
+   - alignment: string - Alignment (center, end) (optional)
+#}
+<nav aria-label="{{ content.label|default('...') }}"{% if content.class %} class="{{ content.class }}"{% endif %}>
+  <ul class="pagination{% if content.size %} pagination-{{ content.size }}{% endif %}{% if content.alignment %} justify-content-{{ content.alignment }}{% endif %}">
+    {% for item in content.items %}
+    <li class="page-item{% if item.active %} active{% endif %}{% if item.disabled %} disabled{% endif %}">
+      {% if item.disabled %}
+      <a class="page-link">{{ item.text }}</a>
+      {% else %}
+      <a class="page-link" href="{{ item.url|default('#') }}"{% if item.label %} aria-label="{{ item.label }}"{% endif %}{% if item.active %} aria-current="page"{% endif %}>
+        {% if item.icon %}
+          <span aria-hidden="true">{{ item.icon|raw }}</span>
+        {% else %}
+          {{ item.text }}
+        {% endif %}
+      </a>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</nav>
