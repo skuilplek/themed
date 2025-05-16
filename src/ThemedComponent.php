@@ -390,64 +390,107 @@ class ThemedComponent
         return self::$twig->render($templateFile, $context);
     }
 
-    public static function loadScripts($component = ""): void
+    /**
+     * Load scripts and styles for components with security checks
+     * 
+     * @param string $component Component name (without extension)
+     * @throws \InvalidArgumentException If the component name contains invalid characters
+     */
+    public static function loadScripts(string $component = ""): void
     {
-        $themePath = self::getThemePath();
-
+        $themePath = rtrim(self::getThemePath(), '/');
+        
         if (empty($component)) {
-            //Load all css files
-            if (file_exists($themePath . "css/")) {
-                $files = glob($themePath . "css/*.css");
-                foreach ($files as $file) {
-                    $script = "";
-                    if (intval(getenv("THEMED_DEBUG")) > 0) {
-                        $script .= "<!-- " . $file . " -->\n";
-                    }
-                    $cssContent = file_get_contents($file);
-                    $cssContent = self::processStylesWithFonts($cssContent, dirname($file));
-                    $script .= "<style>\n" . self::minifyCss($cssContent) . "\n</style>";
-                    self::headerScripts($script);
+            // Define allowed directories relative to theme path
+            $allowedDirs = [
+                'css' => '/*.css',
+                'js' => '/*.js',
+                'js/footer' => '/*.js'
+            ];
+            
+            foreach ($allowedDirs as $dir => $pattern) {
+                $dirPath = $themePath . '/' . $dir;
+                $resolvedDir = realpath($dirPath);
+                
+                // Skip if directory doesn't exist or is outside theme path
+                if ($resolvedDir === false || strpos($resolvedDir, $themePath) !== 0) {
+                    continue;
                 }
-            }
-
-            //Load all js files
-            if (file_exists($themePath . "js/")) {
-                $files = glob($themePath . "js/*.js");
-                foreach ($files as $file) {
-                    $script = "";
-                    if (intval(getenv("THEMED_DEBUG")) > 0) {
-                        $script .= "<!-- " . $file . " -->\n";
-                    }
-                    $script .= "<script>\n" . self::minifyJs(file_get_contents($file)) . "\n</script>";
-                    self::headerScripts($script);
+                
+                $files = glob($resolvedDir . $pattern);
+                if ($files === false) {
+                    continue;
                 }
-            }
-
-            //Load all footer/js files into the footer
-            if (file_exists($themePath . "js/footer/")) {
-                $files = glob($themePath . "js/footer/*.js");
+                
                 foreach ($files as $file) {
-                    $script = "";
-                    if (intval(getenv("THEMED_DEBUG")) > 0) {
-                        $script .= "<!-- " . $file . " -->\n";
+                    // Double-check the resolved path is within theme directory
+                    $resolvedFile = realpath($file);
+                    if ($resolvedFile === false || strpos($resolvedFile, $themePath) !== 0) {
+                        continue;
                     }
-                    $script .= "<script>\n" . self::minifyJs(file_get_contents($file)) . "\n</script>";
-                    self::footerScripts($script);
+                    
+                    $content = @file_get_contents($resolvedFile);
+                    if ($content === false) {
+                        self::log("Failed to read file: {$resolvedFile}");
+                        continue;
+                    }
+                    
+                    $script = "";
+                    if (intval(getenv("THEMED_DEBUG") ?: '0') > 0) {
+                        $script .= "<!-- " . basename($resolvedFile) . " -->\n";
+                    }
+                    
+                    if (str_ends_with($resolvedFile, '.css')) {
+                        $content = self::processStylesWithFonts($content, dirname($resolvedFile));
+                        $script .= "<style>\n" . self::minifyCss($content) . "\n</style>";
+                        self::headerScripts($script);
+                    } elseif (str_ends_with($resolvedFile, '.js')) {
+                        $script .= "<script>\n" . self::minifyJs($content) . "\n</script>";
+                        $isFooter = str_contains($resolvedFile, '/footer/');
+                        $isFooter ? self::footerScripts($script) : self::headerScripts($script);
+                    }
                 }
             }
         } else {
-            //Load the component css and js files
-            $componentCssFile = $themePath . "components/" . $component . ".css";
-            if (file_exists($componentCssFile)) {
-                $script = file_get_contents($componentCssFile);
-                $script = "<style>\n" . self::minifyCss($script) . "\n</style>";
-                self::headerScripts($script);
+            // Validate component name
+            if (!preg_match('/^[a-zA-Z0-9\-_\/]+$/', $component)) {
+                throw new \InvalidArgumentException('Invalid component name. Only alphanumeric characters, hyphens, underscores and forward slashes are allowed.');
             }
-            $componentJsFile = $themePath . "components/" . $component . ".js";
-            if (file_exists($componentJsFile)) {
-                $script = file_get_contents($componentJsFile);
-                $script = "<script>\n" . self::minifyJs($script) . "\n</script>";
-                self::footerScripts($script);
+            
+            // Define component files to load
+            $componentFiles = [
+                'css' => "/components/{$component}.css",
+                'js' => "/components/{$component}.js"
+            ];
+            
+            foreach ($componentFiles as $type => $file) {
+                $filePath = $themePath . $file;
+                $resolvedPath = realpath($filePath);
+                
+                // Skip if file doesn't exist or is outside theme path
+                if ($resolvedPath === false || strpos($resolvedPath, $themePath) !== 0) {
+                    continue;
+                }
+                
+                $content = @file_get_contents($resolvedPath);
+                if ($content === false) {
+                    self::log("Failed to read component file: {$resolvedPath}");
+                    continue;
+                }
+                
+                $script = "";
+                if (intval(getenv("THEMED_DEBUG") ?: '0') > 0) {
+                    $script .= "<!-- " . basename($resolvedPath) . " -->\n";
+                }
+                
+                if ($type === 'css') {
+                    $content = self::processStylesWithFonts($content, dirname($resolvedPath));
+                    $script .= "<style>\n" . self::minifyCss($content) . "\n</style>";
+                    self::headerScripts($script);
+                } else {
+                    $script .= "<script>\n" . self::minifyJs($content) . "\n</script>";
+                    self::footerScripts($script);
+                }
             }
         }
     }
@@ -715,30 +758,58 @@ class ThemedComponent
     }
 
 
+    /**
+     * Get SVG content by name with security checks against path traversal
+     * 
+     * @param string $name Name of the SVG file (without .svg extension)
+     * @return string|null The SVG content or null if not found
+     * @throws \InvalidArgumentException If the name contains invalid characters
+     */
     public static function getSvgContent(string $name): ?string
     {
+        // Validate input
+        if (!preg_match('/^[a-zA-Z0-9\-_\/]+$/', $name)) {
+            throw new \InvalidArgumentException('Invalid SVG name. Only alphanumeric characters, hyphens, underscores and forward slashes are allowed.');
+        }
+
+        // Check cache first
         if (isset(self::$svgCache[$name])) {
             return self::$svgCache[$name];
         }
 
-        $themePath = self::getThemePath();
+        $themePath = rtrim(self::getThemePath(), '/');
         self::log("Theme path: {$themePath}");
 
-        $svgPath = $themePath . 'icons/' . $name . '.svg';
-        self::log("Looking for SVG at: {$svgPath}");
+        // Define allowed paths
+        $possiblePaths = [
+            $themePath . '/icons/' . $name . '.svg',
+            $themePath . '/' . $name . '.svg'
+        ];
 
-        if (!file_exists($svgPath)) {
-            // Try without the icons/ prefix
-            $svgPath = $themePath . $name . '.svg';
-            self::log("Not found, trying: {$svgPath}");
+        $svgPath = null;
+        
+        // Check each possible path
+        foreach ($possiblePaths as $path) {
+            $resolvedPath = realpath($path);
+            // Ensure the resolved path is within the theme directory
+            if ($resolvedPath !== false && strpos($resolvedPath, $themePath) === 0) {
+                $svgPath = $resolvedPath;
+                self::log("Found SVG at: {$svgPath}");
+                break;
+            }
         }
 
-        if (!file_exists($svgPath)) {
-            self::log("Icon not found: {$svgPath}");
+        if ($svgPath === null || !file_exists($svgPath)) {
+            self::log("SVG not found: {$name}");
             return null;
         }
 
-        $svg = file_get_contents($svgPath);
+        $svg = @file_get_contents($svgPath);
+        if ($svg === false) {
+            self::log("Failed to read SVG file: {$svgPath}");
+            return null;
+        }
+
         // Remove XML declaration and optimize SVG
         $svg = preg_replace('/<\?xml.*?\?>/', '', $svg);
         $svg = preg_replace('/<!--.*?-->/', '', $svg);
