@@ -517,14 +517,30 @@ class ThemedComponent
         return $themePath;
     }
 
+    /**
+     * Ensure session is started
+     */
+    private static function ensureSessionStarted(): void
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        if (!isset($_SESSION[self::SESSION_KEY])) {
+            $_SESSION[self::SESSION_KEY] = [];
+        }
+    }
+
     public static function headerScripts($script = "", $type = "auto", $attributes = []): ?string
     {
+        self::ensureSessionStarted();
+        
         // If a custom script callback is set, delegate all non-empty scripts to it
         if ($script !== '' && is_callable(self::$scriptCallback)) {
             $ext = $type === 'auto' ? pathinfo($script, PATHINFO_EXTENSION) : $type;
             call_user_func(self::$scriptCallback, $script, $ext, 'header');
             return null;
         }
+        
         if (!isset($_SESSION[self::SESSION_KEY]['header_scripts'])) {
             $_SESSION[self::SESSION_KEY]['header_scripts'] = [];
         }
@@ -569,12 +585,15 @@ class ThemedComponent
 
     public static function footerScripts($script = "", $type = "auto", $attributes = []): ?string
     {
+        self::ensureSessionStarted();
+        
         // If a custom script callback is set, delegate all non-empty scripts to it
         if ($script !== '' && is_callable(self::$scriptCallback)) {
             $ext = $type === 'auto' ? pathinfo($script, PATHINFO_EXTENSION) : $type;
             call_user_func(self::$scriptCallback, $script, $ext, 'footer');
             return null;
         }
+        
         if (!isset($_SESSION[self::SESSION_KEY]['footer_scripts'])) {
             $_SESSION[self::SESSION_KEY]['footer_scripts'] = [];
         }
