@@ -170,6 +170,13 @@ class ThemedComponent
      * @param string $componentFile Path to the .twig template file
      * @return $this
      */
+    /**
+     * Parse parameters from Twig docblock
+     * 
+     * @param string $componentFile Path to the component file
+     * @return $this
+     * @throws \RuntimeException If the file cannot be read
+     */
     private function parseParametersFromDocblock(string $componentFile)
     {
         // Parameter-block caching: reuse previously parsed definitions
@@ -177,9 +184,19 @@ class ThemedComponent
             $this->parameters = self::$parameterCache[$componentFile];
             return $this;
         }
+        
         $parameters = [];
-        if (file_exists($componentFile)) {
-            $componentHtml = file_get_contents($componentFile);
+        
+        try {
+            if (!file_exists($componentFile)) {
+                throw new \RuntimeException("Component file does not exist: {$componentFile}");
+            }
+            
+            $componentHtml = @file_get_contents($componentFile);
+            if ($componentHtml === false) {
+                throw new \RuntimeException("Failed to read component file: {$componentFile}");
+            }
+            
             // Step 1: Extract the comment block
             // Match only the first Twig docblock at the top of the file
             if (preg_match('/\A\s*\{#([\s\S]*?)#\}/', $componentHtml, $commentMatch)) {
@@ -193,6 +210,11 @@ class ThemedComponent
                         $parameters[$param] = $description;
                     }
                 }
+            }
+        } catch (\Exception $e) {
+            self::log("Error parsing docblock: " . $e->getMessage());
+            if ($this->debugging) {
+                throw $e;
             }
         }
         $methods = [
@@ -503,23 +525,64 @@ class ThemedComponent
     {
         self::$scriptCallback = $callback;
     }
+    /**
+     * Process CSS and embed font files as base64 data URIs
+     * 
+     * @param string $css CSS content to process
+     * @param string $basePath Base path for resolving relative font URLs
+     * @return string Processed CSS with embedded fonts
+     */
     private static function processStylesWithFonts(string $css, string $basePath): string
     {
-        // Find all font URLs in the CSS
-        if (preg_match_all('/url\(["\']?([^"\'\)]+)["\']?\)/i', $css, $matches)) {
+        try {
+            // Normalize base path
+            $basePath = rtrim($basePath, '/\\');
+            
+            // Find all font URLs in the CSS
+            if (!preg_match_all('/url\([\"\']?([^\"\'\)]+)[\"\']?\)/i', $css, $matches)) {
+                return $css;
+            }
+            
+            $replacements = [];
+            
             foreach ($matches[1] as $index => $fontPath) {
-                // Remove query string if present
-                $fontPath = explode('?', $fontPath)[0];
-
-                // Convert relative path to absolute
-                $fullFontPath = $basePath . '/' . ltrim($fontPath, './');
-
-                if (file_exists($fullFontPath)) {
-                    // Get font file content and encode as base64
-                    $fontContent = base64_encode(file_get_contents($fullFontPath));
-
+                try {
+                    // Skip if already processed or invalid
+                    if (str_starts_with($fontPath, 'data:') || trim($fontPath) === '') {
+                        continue;
+                    }
+                    
+                    // Remove query string and fragment if present
+                    $fontPath = strtok($fontPath, '?#');
+                    
+                    // Handle absolute URLs (skip if not local)
+                    if (preg_match('#^(https?:)?//#i', $fontPath)) {
+                        self::log("Skipping remote font: {$fontPath}");
+                        continue;
+                    }
+                    
+                    // Convert relative path to absolute
+                    $fontPath = ltrim($fontPath, './');
+                    $fullFontPath = realpath($basePath . '/' . $fontPath);
+                    
+                    // Verify the resolved path is within the base directory
+                    if ($fullFontPath === false || strpos($fullFontPath, $basePath) !== 0) {
+                        throw new \RuntimeException("Font path resolution failed or points outside base directory: {$fontPath}");
+                    }
+                    
+                    // Check file existence and readability
+                    if (!is_readable($fullFontPath)) {
+                        throw new \RuntimeException("Font file not readable: {$fullFontPath}");
+                    }
+                    
+                    // Read file content
+                    $fontContent = file_get_contents($fullFontPath);
+                    if ($fontContent === false) {
+                        throw new \RuntimeException("Failed to read font file: {$fullFontPath}");
+                    }
+                    
                     // Get mime type based on extension
-                    $ext = pathinfo($fullFontPath, PATHINFO_EXTENSION);
+                    $ext = strtolower(pathinfo($fullFontPath, PATHINFO_EXTENSION));
                     $mimeType = match ($ext) {
                         'woff2' => 'font/woff2',
                         'woff' => 'font/woff',
@@ -528,16 +591,34 @@ class ThemedComponent
                         'svg' => 'image/svg+xml',
                         default => 'application/octet-stream'
                     };
-
-                    // Replace URL with base64 data
-                    $dataUrl = "data:{$mimeType};base64,{$fontContent}";
-                    $css = str_replace($matches[0][$index], "url('{$dataUrl}')", $css);
-                    self::log("Embedded font file: {$fullFontPath}");
-                } else {
-                    self::log("Missing font file: {$fullFontPath}");
+                    
+                    // Encode and create data URL
+                    $dataUrl = "data:{$mimeType};base64," . base64_encode($fontContent);
+                    $replacements[$matches[0][$index]] = "url('{$dataUrl}')";
+                    
+                    self::log("Successfully embedded font: {$fullFontPath}");
+                    
+                } catch (\Exception $e) {
+                    self::log("Error processing font URL '{$fontPath}': " . $e->getMessage());
+                    // Continue with next font if one fails
+                    continue;
                 }
             }
+            
+            // Apply all replacements at once
+            if (!empty($replacements)) {
+                $css = str_replace(
+                    array_keys($replacements),
+                    array_values($replacements),
+                    $css
+                );
+            }
+            
+        } catch (\Exception $e) {
+            self::log("Error in processStylesWithFonts: " . $e->getMessage());
+            // Continue with unprocessed CSS on error
         }
+        
         return $css;
     }
 
@@ -765,59 +846,90 @@ class ThemedComponent
      * @return string|null The SVG content or null if not found
      * @throws \InvalidArgumentException If the name contains invalid characters
      */
+    /**
+     * Get SVG content by name with security checks against path traversal
+     * 
+     * @param string $name Name of the SVG file (without .svg extension)
+     * @return string|null The SVG content or null if not found or on error
+     * @throws \InvalidArgumentException If the name contains invalid characters
+     * @throws \RuntimeException If there's an error reading the file
+     */
     public static function getSvgContent(string $name): ?string
     {
-        // Validate input
-        if (!preg_match('/^[a-zA-Z0-9\-_\/]+$/', $name)) {
-            throw new \InvalidArgumentException('Invalid SVG name. Only alphanumeric characters, hyphens, underscores and forward slashes are allowed.');
-        }
-
-        // Check cache first
-        if (isset(self::$svgCache[$name])) {
-            return self::$svgCache[$name];
-        }
-
-        $themePath = rtrim(self::getThemePath(), '/');
-        self::log("Theme path: {$themePath}");
-
-        // Define allowed paths
-        $possiblePaths = [
-            $themePath . '/icons/' . $name . '.svg',
-            $themePath . '/' . $name . '.svg'
-        ];
-
-        $svgPath = null;
-        
-        // Check each possible path
-        foreach ($possiblePaths as $path) {
-            $resolvedPath = realpath($path);
-            // Ensure the resolved path is within the theme directory
-            if ($resolvedPath !== false && strpos($resolvedPath, $themePath) === 0) {
-                $svgPath = $resolvedPath;
-                self::log("Found SVG at: {$svgPath}");
-                break;
+        try {
+            // Validate input
+            if (!preg_match('/^[a-zA-Z0-9\-_\/]+$/', $name)) {
+                throw new \InvalidArgumentException('Invalid SVG name. Only alphanumeric characters, hyphens, underscores and forward slashes are allowed.');
             }
-        }
 
-        if ($svgPath === null || !file_exists($svgPath)) {
-            self::log("SVG not found: {$name}");
+            // Check cache first
+            if (isset(self::$svgCache[$name])) {
+                return self::$svgCache[$name];
+            }
+
+            $themePath = rtrim(self::getThemePath(), '/');
+            self::log("Looking for SVG: {$name} in theme path: {$themePath}");
+
+            // Define allowed paths
+            $possiblePaths = [
+                $themePath . '/icons/' . $name . '.svg',
+                $themePath . '/' . $name . '.svg'
+            ];
+
+            $svgPath = null;
+            
+            // Check each possible path
+            foreach ($possiblePaths as $path) {
+                $resolvedPath = realpath($path);
+                // Ensure the resolved path is within the theme directory
+                if ($resolvedPath !== false && strpos($resolvedPath, $themePath) === 0) {
+                    if (!is_readable($resolvedPath)) {
+                        self::log("SVG file not readable: {$resolvedPath}");
+                        continue;
+                    }
+                    $svgPath = $resolvedPath;
+                    self::log("Found SVG at: {$svgPath}");
+                    break;
+                }
+            }
+
+            if ($svgPath === null) {
+                self::log("SVG not found in any allowed location: {$name}");
+                return null;
+            }
+
+            $svg = file_get_contents($svgPath);
+            if ($svg === false) {
+                throw new \RuntimeException("Failed to read SVG file: {$svgPath}");
+            }
+
+            // Basic SVG validation
+            if (trim($svg) === '') {
+                throw new \RuntimeException("SVG file is empty: {$svgPath}");
+            }
+
+            // Remove XML declaration and optimize SVG
+            $svg = preg_replace('/<\?xml.*?\?>/', '', $svg);
+            $svg = preg_replace('/<!--.*?-->/', '', $svg);
+            $svg = preg_replace('/>\s+</', '><', $svg);
+
+            $result = trim($svg);
+            if (empty($result)) {
+                throw new \RuntimeException("SVG processing resulted in empty content: {$svgPath}");
+            }
+
+            // Cache the result
+            self::$svgCache[$name] = $result;
+            return $result;
+            
+        } catch (\Exception $e) {
+            $debug = intval(getenv("THEMED_DEBUG") ?: '0') > 0;
+            self::log("Error in getSvgContent({$name}): " . $e->getMessage());
+            if ($debug) {
+                throw $e;
+            }
             return null;
         }
-
-        $svg = @file_get_contents($svgPath);
-        if ($svg === false) {
-            self::log("Failed to read SVG file: {$svgPath}");
-            return null;
-        }
-
-        // Remove XML declaration and optimize SVG
-        $svg = preg_replace('/<\?xml.*?\?>/', '', $svg);
-        $svg = preg_replace('/<!--.*?-->/', '', $svg);
-        $svg = preg_replace('/>\s+</', '><', $svg);
-
-        // Cache the result
-        self::$svgCache[$name] = trim($svg);
-        return self::$svgCache[$name];
     }
 
     private static function minifyCss(string $css): string
