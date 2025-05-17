@@ -104,7 +104,7 @@ class ThemedComponent
         }
         $this->templatePath = $themePath;
 
-        self::log("Loading scripts for component: {$component}, id: {$this->id}");
+        self::log("NOTICE: Loading scripts for component: {$component}, id: {$this->id}");
         self::loadScripts($component);
 
         // Parse parameter definitions from the Twig docblock
@@ -118,6 +118,7 @@ class ThemedComponent
     public static function setLoggerCallback(callable $callback): void
     {
         self::$loggerCallback = $callback;
+        error_log("Custom logger callback registered"); // Use error_log here to avoid recursion
     }
     /**
      * Set a custom Twig Environment to use (skips default bootstrap).
@@ -125,6 +126,7 @@ class ThemedComponent
     public static function setTwigEnvironment(Environment $twig): void
     {
         self::$twig = $twig;
+        self::log("NOTICE: Custom Twig environment set");
     }
 
     /**
@@ -132,7 +134,11 @@ class ThemedComponent
      */
     public static function getTwigEnvironment(): ?Environment
     {
-        return self::$twig;
+        $twig = self::$twig;
+        if ($twig === null) {
+            self::log("NOTICE: Twig environment not initialized");
+        }
+        return $twig;
     }
 
     /**
@@ -141,21 +147,30 @@ class ThemedComponent
      */
     public static function setBasePath(string $path): void
     {
-        self::$baseTemplatePath = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        self::$baseTemplatePath = rtrim($path, '/');
+        self::log("NOTICE: Base template path set to: {$path}");
         // Reset Twig to force re-initialization with new loader
         self::$twig = null;
     }
 
     /**
-     * Internal log method. Uses custom logger if set, otherwise falls back to self::log().
+     * Log a message with auto-detected debug levels
+     * 
+     * @param string $message Message to log. The level is auto-detected from the message prefix:
+     *                       'ERROR:' = level 0 (error)
+     *                       'WARN:' = level 1 (warning)
+     *                       'NOTICE:' = level 2 (notice)
+     *                       No prefix = level 3 (info)
      */
     protected static function log(string $message): void
     {
+        // If a custom logger is set, use it regardless of debug level
         if (self::$loggerCallback !== null) {
             call_user_func(self::$loggerCallback, $message);
-        } else {
-            self::internalLog($message);
+            return;
         }
+
+        self::internalLog($message);
     }
 
     public function getParameters()
@@ -212,7 +227,7 @@ class ThemedComponent
                 }
             }
         } catch (\Exception $e) {
-            self::log("Error parsing docblock: " . $e->getMessage());
+            self::log("ERROR: Error parsing docblock: " . $e->getMessage());
             if ($this->debugging) {
                 throw $e;
             }
@@ -241,7 +256,7 @@ class ThemedComponent
         // Cache the parsed parameters for this template file
         self::$parameterCache[$componentFile] = $parameters;
         if ($this->debuggingLevel > 1) {
-            self::log("parameters: {$this->component} : " . json_encode($parameters));
+            self::log("NOTICE: parameters: {$this->component} : " . json_encode($parameters));
         }
         return $this;
     }
@@ -270,7 +285,7 @@ class ThemedComponent
     {
         if (!method_exists($this, $method)) {
             if ($this->debuggingLevel > 2) {
-                self::log("Content: {$this->component} : " . json_encode($args));
+                self::log("NOTICE: Content: {$this->component} : " . json_encode($args));
             }
             if (is_array($args) && !empty($args[0])) {
                 $args = reset($args);
@@ -291,6 +306,7 @@ class ThemedComponent
     protected function id(string $id): self
     {
         $this->id = $id;
+        self::log("NOTICE: Component ID set to: {$id}");
         return $this;
     }
 
@@ -299,7 +315,8 @@ class ThemedComponent
      */
     protected function addCss(string $css): self
     {
-        $this->css[md5($css)] = $css;
+        $this->css[] = $css;
+        self::log("NOTICE: Added CSS to component: " . substr($css, 0, 100) . (strlen($css) > 100 ? '...' : ''));
         return $this;
     }
 
@@ -308,22 +325,25 @@ class ThemedComponent
      */
     protected function addJavaScript(string $script): self
     {
-        $this->javascript[md5($script)] = $script;
+        $this->javascript[] = $script;
+        self::log("NOTICE: Added JavaScript to component: " . substr($script, 0, 100) . (strlen($script) > 100 ? '...' : ''));
         return $this;
     }
 
     /**
      * Adds an HTML attribute to the component.
      */
-    protected function addAttribute(string $name, string $value): self
+    public function addAttribute(string $name, string $value): self
     {
         $this->attributes[$name] = $value;
+        self::log("NOTICE: Added attribute {$name}='{$value}' to component {$this->component}");
         return $this;
     }
 
-    protected function canSee(bool $canSee): self
+    public function canSee(bool $canSee): self
     {
         $this->canSee = $canSee;
+        self::log("NOTICE: Component visibility set to: " . ($canSee ? 'visible' : 'hidden'));
         return $this;
     }
 
@@ -348,7 +368,7 @@ class ThemedComponent
             if($this->debugging) {
                 throw new Exception('Component group and name must be set before rendering');
             } else {
-                self::log('Component group and name must be set before rendering');
+                self::log('ERROR: Component group and name must be set before rendering');
                 return "<!-- ERROR: Component group and name must be set before rendering -->";
             }
         }
@@ -359,7 +379,7 @@ class ThemedComponent
             if($this->debugging) {
                 throw new Exception('Twig environment not initialized. Call ThemedComponent::setBasePath() first.');
             } else {
-                self::log('Twig environment not initialized. Call ThemedComponent::setBasePath() first.');
+                self::log('ERROR: Twig environment not initialized. Call ThemedComponent::setBasePath() first.');
                 return "<!-- ERROR: Twig environment not initialized. -->";
             }
         }
@@ -405,7 +425,7 @@ class ThemedComponent
                     implode(', ', $paths)
                 ));
             } else {
-                self::log(sprintf('Template "%s" not found. Searched in: %s', $templateFile, implode(', ', $paths)));
+                self::log(sprintf('ERROR: Template "%s" not found. Searched in: %s', $templateFile, implode(', ', $paths)));
                 return "<!-- ERROR: Template \"{$templateFile}\" not found. -->";
             }
         }
@@ -453,7 +473,7 @@ class ThemedComponent
                     
                     $content = @file_get_contents($resolvedFile);
                     if ($content === false) {
-                        self::log("Failed to read file: {$resolvedFile}");
+                        self::log("ERROR: Failed to read file: {$resolvedFile}");
                         continue;
                     }
                     
@@ -496,7 +516,7 @@ class ThemedComponent
                 
                 $content = @file_get_contents($resolvedPath);
                 if ($content === false) {
-                    self::log("Failed to read component file: {$resolvedPath}");
+                    self::log("ERROR: Failed to read component file: {$resolvedPath}");
                     continue;
                 }
                 
@@ -524,6 +544,7 @@ class ThemedComponent
     public static function setScriptCallback(callable $callback): void
     {
         self::$scriptCallback = $callback;
+        self::log("NOTICE: Custom script callback registered");
     }
     /**
      * Process CSS and embed font files as base64 data URIs
@@ -557,7 +578,7 @@ class ThemedComponent
                     
                     // Handle absolute URLs (skip if not local)
                     if (preg_match('#^(https?:)?//#i', $fontPath)) {
-                        self::log("Skipping remote font: {$fontPath}");
+                        self::log("NOTICE: Skipping remote font: {$fontPath}");
                         continue;
                     }
                     
@@ -596,10 +617,10 @@ class ThemedComponent
                     $dataUrl = "data:{$mimeType};base64," . base64_encode($fontContent);
                     $replacements[$matches[0][$index]] = "url('{$dataUrl}')";
                     
-                    self::log("Successfully embedded font: {$fullFontPath}");
+                    self::log("NOTICE: Successfully embedded font: {$fullFontPath}");
                     
                 } catch (\Exception $e) {
-                    self::log("Error processing font URL '{$fontPath}': " . $e->getMessage());
+                    self::log("ERROR: Error processing font URL '{$fontPath}': " . $e->getMessage());
                     // Continue with next font if one fails
                     continue;
                 }
@@ -615,7 +636,7 @@ class ThemedComponent
             }
             
         } catch (\Exception $e) {
-            self::log("Error in processStylesWithFonts: " . $e->getMessage());
+            self::log("ERROR: Error in processStylesWithFonts: " . $e->getMessage());
             // Continue with unprocessed CSS on error
         }
         
@@ -624,19 +645,14 @@ class ThemedComponent
 
     public static function getThemePath(): string
     {
-        $themePath = getenv('THEMED_TEMPLATE_PATH') ?? '';
-        if (empty($themePath) || !file_exists($themePath)) {
-            $themePath = '';
-        }
-        if (empty($themePath)) {
-            //One folder back
-            $themePath = dirname(dirname(__FILE__)) . "/";
-
-            //This is the default theme
-            $themePath .= "template/bs5/";
+        self::log("NOTICE: Getting theme path");
+        $themePath = getenv('THEMED_TEMPLATE_PATH') ?? getenv('THEMED_PATH') ?? getenv('THEMED_THEME_PATH') ?? dirname(__DIR__) . '/template/';
+        if (!file_exists($themePath)) {
+            self::log("NOTICE: Default theme path not found, trying bs5");
+            $themePath .= 'template/bs5/';
         }
         if (!file_exists($themePath)) {
-            self::log("Unable to find theme in: {$themePath}");
+            self::log("ERROR: Unable to find theme in: {$themePath}");
         }
         return $themePath;
     }
@@ -647,7 +663,10 @@ class ThemedComponent
     private static function ensureSessionStarted(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
+            self::log("NOTICE: Starting session");
             session_start();
+        } else {
+            self::log("NOTICE: Session already started");
         }
         if (!isset($_SESSION[self::SESSION_KEY])) {
             $_SESSION[self::SESSION_KEY] = [];
@@ -657,35 +676,42 @@ class ThemedComponent
     public static function headerScripts($script = "", $type = "auto", $attributes = []): ?string
     {
         self::ensureSessionStarted();
+        self::log("NOTICE: Processing header script request");
         
         // If a custom script callback is set, delegate all non-empty scripts to it
         if ($script !== '' && is_callable(self::$scriptCallback)) {
             $ext = $type === 'auto' ? pathinfo($script, PATHINFO_EXTENSION) : $type;
             call_user_func(self::$scriptCallback, $script, $ext, 'header');
+            self::log("NOTICE: Header script processed by custom callback");
             return null;
         }
         
         if (!isset($_SESSION[self::SESSION_KEY]['header_scripts'])) {
             $_SESSION[self::SESSION_KEY]['header_scripts'] = [];
+            self::log("NOTICE: Initialized header scripts array");
         }
         if (empty($script)) {
             self::loadScripts();
             if ((int) (getenv('THEMED_DEBUG_LEVEL') ?? 0) > 2) {
-                self::log("Header Scripts: " . json_encode($_SESSION[self::SESSION_KEY]['header_scripts']));
+                self::log("NOTICE: Header Scripts: " . json_encode($_SESSION[self::SESSION_KEY]['header_scripts']));
             }
             $scripts = implode("\n", $_SESSION[self::SESSION_KEY]['header_scripts']);
             $_SESSION[self::SESSION_KEY]['header_scripts'] = [];
+            self::log("NOTICE: Returning header scripts");
             return $scripts;
         }
 
         if ((int) (getenv("THEMED_DEBUG_LEVEL") ?? 0) > 0) {
-            self::log("Adding Header Script: " . $script);
+            self::log("NOTICE: Adding Header Script: " . $script);
         }
+
         //Get script extension
         if ($type == "auto") {
             $scriptExtension = pathinfo($script, PATHINFO_EXTENSION);
+            self::log("NOTICE: Auto-detected script extension: " . $scriptExtension);
         } else {
             $scriptExtension = $type;
+            self::log("NOTICE: Using specified script type: " . $scriptExtension);
         }
         //If it is js, then add a script tag around it
         // Convert attributes array to string
@@ -724,7 +750,7 @@ class ThemedComponent
         if (empty($script)) {
             self::loadScripts();
             if ((int) (getenv('THEMED_DEBUG_LEVEL') ?? 0) > 2) {
-                self::log("Footer Scripts: " . json_encode($_SESSION[self::SESSION_KEY]['footer_scripts']));
+                self::log("NOTICE: Footer Scripts: " . json_encode($_SESSION[self::SESSION_KEY]['footer_scripts']));
             }
             $scripts = implode("\n", $_SESSION[self::SESSION_KEY]['footer_scripts']);
             $_SESSION[self::SESSION_KEY]['footer_scripts'] = [];
@@ -732,7 +758,7 @@ class ThemedComponent
         }
 
         if ((int) (getenv("THEMED_DEBUG_LEVEL") ?? 0) > 0) {
-            self::log("Adding Footer Script: " . $script);
+            self::log("NOTICE: Adding Footer Script: " . $script);
         }
 
         //Get script extension
@@ -762,19 +788,66 @@ class ThemedComponent
         return null;
     }
 
-    public static function internalLog(string $message)
+    /**
+     * Internal logging implementation with auto-detected debug levels
+     * 
+     * @param string $message Message to log. The level is auto-detected from the message prefix:
+     *                       'ERROR:' = level 0 (error)
+     *                       'WARN:' = level 1 (warning)
+     *                       'NOTICE:' = level 2 (notice)
+     *                       No prefix = level 3 (info)
+     */
+    protected static function internalLog(string $message): void
     {
-        if (intval(getenv("THEMED_DEBUG")) < 1) {
+        $debug = (bool) (getenv('THEMED_DEBUG') ?: false);
+        $debugLevel = (int) (getenv('THEMED_DEBUG_LEVEL') ?: '0');
+
+        // Auto-detect level from message prefix
+        $level = 3; // Default to INFO level
+        if (preg_match('/^(ERROR|WARN|NOTICE):/', $message, $matches)) {
+            $level = match($matches[1]) {
+                'ERROR' => 0,
+                'WARN' => 1,
+                'NOTICE' => 2
+            };
+            // Remove the prefix from the message
+            $message = trim(substr($message, strlen($matches[1]) + 1));
+        }
+
+        // Skip logging if debugging is disabled or message level is higher than debug level
+        if (!$debug || $debugLevel < $level) {
             return;
         }
-        $logFilePath = getenv('THEMED_DEBUG_LOG') ?? "";
-        if (empty($logFilePath)) {
-            $logFilePath = "/tmp/themed.log";
+
+        // Add level prefix to message
+        $prefix = match($level) {
+            0 => '[ERROR] ',
+            1 => '[WARN] ',
+            2 => '[NOTICE] ',
+            3 => '[INFO] ',
+            default => '[LOG] '
+        };
+
+        $logFilePath = getenv('THEMED_DEBUG_LOG') ?? '/tmp/themed.log';
+        $logMessage = date('Y-m-d H:i:s') . ' ' . $prefix . $message . "\n";
+
+        // Ensure log directory exists
+        $logDir = dirname($logFilePath);
+        if (!is_dir($logDir)) {
+            try {
+                mkdir($logDir, 0755, true);
+            } catch (\Exception $e) {
+                error_log("Unable to create log directory: " . $e->getMessage());
+                return;
+            }
         }
+
+        // Create log file if it doesn't exist
         if (!file_exists($logFilePath)) {
             try {
                 touch($logFilePath);
-            } catch (Exception $e) {
+                chmod($logFilePath, 0644);
+            } catch (\Exception $e) {
                 error_log("Unable to create log file: " . $e->getMessage());
                 return;
             }
@@ -868,7 +941,7 @@ class ThemedComponent
             }
 
             $themePath = rtrim(self::getThemePath(), '/');
-            self::log("Looking for SVG: {$name} in theme path: {$themePath}");
+            self::log("NOTICE: Looking for SVG: {$name} in theme path: {$themePath}");
 
             // Define allowed paths
             $possiblePaths = [
@@ -884,17 +957,17 @@ class ThemedComponent
                 // Ensure the resolved path is within the theme directory
                 if ($resolvedPath !== false && strpos($resolvedPath, $themePath) === 0) {
                     if (!is_readable($resolvedPath)) {
-                        self::log("SVG file not readable: {$resolvedPath}");
+                        self::log("WARN: SVG file not readable: {$resolvedPath}");
                         continue;
                     }
                     $svgPath = $resolvedPath;
-                    self::log("Found SVG at: {$svgPath}");
+                    self::log("NOTICE: Found SVG at: {$svgPath}");
                     break;
                 }
             }
 
             if ($svgPath === null) {
-                self::log("SVG not found in any allowed location: {$name}");
+                self::log("WARN: SVG not found in any allowed location: {$name}");
                 return null;
             }
 
@@ -924,7 +997,7 @@ class ThemedComponent
             
         } catch (\Exception $e) {
             $debug = intval(getenv("THEMED_DEBUG") ?: '0') > 0;
-            self::log("Error in getSvgContent({$name}): " . $e->getMessage());
+            self::log("ERROR: Error in getSvgContent({$name}): " . $e->getMessage());
             if ($debug) {
                 throw $e;
             }
@@ -934,6 +1007,8 @@ class ThemedComponent
 
     private static function minifyCss(string $css): string
     {
+        $originalSize = strlen($css);
+
         if (intval(getenv("THEMED_DEBUG")) < 1) {
             return $css;
         }
@@ -955,6 +1030,10 @@ class ThemedComponent
         // Remove remaining unnecessary spaces
         $css = trim(preg_replace('/ {2,}/', ' ', $css));
 
+        $minifiedSize = strlen($css);
+        if ($minifiedSize < $originalSize) {
+            self::log("NOTICE: CSS minified: {$originalSize} bytes -> {$minifiedSize} bytes (" . round(($minifiedSize / $originalSize) * 100) . "% of original)");
+        }
         return $css;
     }
 }
