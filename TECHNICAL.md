@@ -64,7 +64,7 @@ This allows the framework to load your custom templates instead of the default B
 
 ## Environment Variables
 
-- **`THEMED_TEMPLATE_PATH`**: Overrides the default template directory (`template/bs5/`).
+- **`THEMED_TEMPLATE_PATH`**: Overrides the default template directory (`/var/www/html/theme/fancytheme/`).
 - **`THEMED_DEBUG`**: Enables debug mode (1 for on, 0 for off).
 - **`THEMED_DEBUG_LEVEL`**: Sets debug verbosity (0-3).
 - **`THEMED_DEBUG_LOG`**: Specifies log file path for debug output.
