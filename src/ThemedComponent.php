@@ -1000,7 +1000,8 @@ class ThemedComponent
             default => '[LOG] '
         };
 
-        $logFilePath = getenv('THEMED_DEBUG_LOG') ?? '/tmp/themed.log';
+        $logFilePath = getenv('THEMED_DEBUG_LOG') ?: '/tmp/themed.log';
+        
         $logMessage = date('Y-m-d H:i:s') . ' ' . $prefix . $message . "\n";
 
         // Ensure log directory exists
